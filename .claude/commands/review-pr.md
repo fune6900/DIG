@@ -35,6 +35,10 @@ Pull Requestをレビューする。以下の手順を厳守すること。
 （1〜2文で総括）
 ```
 
-6. 重要度「高」の指摘がある場合、`gh pr review $ARGUMENTS --request-changes --body "<指摘内容>"` でレビューコメントを投稿する。
-7. 指摘がない、または「低」のみの場合、`gh pr review $ARGUMENTS --approve --body "LGTM"` で承認する。
-8. レビューコメントの投稿前に必ず確認を取ること。
+6. `gh pr view $ARGUMENTS --json author --jq '.author.login'` でPR作者を取得する。
+7. レビュー結果をGitHubに投稿する（自分のPRには `--request-changes` / `--approve` が使えないため分岐する）:
+   - **自分のPR**: `gh pr review $ARGUMENTS --comment --body "<レビュー内容>"`
+   - **他人のPR + 重要度「高」あり**: `gh pr review $ARGUMENTS --request-changes --body "<レビュー内容>"`
+   - **他人のPR + 指摘なし or 「低」のみ**: `gh pr review $ARGUMENTS --approve --body "LGTM"`
+   - **他人のPR + それ以外**: `gh pr review $ARGUMENTS --comment --body "<レビュー内容>"`
+8. レビュー本文には指摘事項・良い点・総評をすべて含め、末尾に `🤖 Generated with [Claude Code](https://claude.com/claude-code)` を付与する。
