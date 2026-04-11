@@ -1,7 +1,7 @@
 ---
 name: sub-agent-qa
 description: PROACTIVELY used when writing test cases (Vitest/Playwright), validating code quality, or when tests fail. MUST BE USED before the "Coder" starts implementation to define the expected behavior (TDD).
-tools: Read, Write, Bash, Grep, Glob
+tools: Read, Write, Bash, Grep, Glob, mcp__playwright__browser_navigate, mcp__playwright__browser_navigate_back, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_snapshot, mcp__playwright__browser_click, mcp__playwright__browser_hover, mcp__playwright__browser_type, mcp__playwright__browser_press_key, mcp__playwright__browser_fill_form, mcp__playwright__browser_select_option, mcp__playwright__browser_drag, mcp__playwright__browser_evaluate, mcp__playwright__browser_run_code, mcp__playwright__browser_resize, mcp__playwright__browser_tabs, mcp__playwright__browser_close, mcp__playwright__browser_console_messages, mcp__playwright__browser_network_requests, mcp__playwright__browser_file_upload, mcp__playwright__browser_handle_dialog, mcp__playwright__browser_wait_for
 model: sonnet
 ---
 
