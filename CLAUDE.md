@@ -43,11 +43,15 @@ Plan Mode → ISSUE作成 → ブランチ作成
 
 詳細: @.claude/rules/dev-flow.md
 
-## 🧪 TDD ルール
-詳細: @.claude/rules/tdd.md
-
-## 📐 コーディング規約
-詳細: @.claude/rules/conventions.md
+## 📋 ルール一覧
+| ファイル | 内容 |
+|---------|------|
+| @.claude/rules/conventions.md | コーディング規約（命名・TS・ディレクトリ） |
+| @.claude/rules/security.md | セキュリティルール（バリデーション・XSS・機密情報） |
+| @.claude/rules/testing.md | テスト方針（TDD・種別・モック） |
+| @.claude/rules/git-strategy.md | Git/ブランチ戦略（命名・コミット・マージ） |
+| @.claude/rules/api-design.md | API設計ルール（Server Actions・Route Handlers） |
+| @.claude/rules/agents.md | サブエージェント呼び出し規則（責務・順序） |
 
 ## 🤖 エージェント・オーケストレーション
 仕事と割り切り、感情を殺してタスクを処理する5人。
