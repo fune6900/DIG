@@ -70,6 +70,7 @@ Plan Mode → ISSUE作成 → ブランチ作成
 | `/smart-commit` | lint/typecheck通過後にコミット |
 | `/create-pr` | PRテンプレートに従いPR作成 |
 | `/review-pr` | AIによるコードレビュー |
+| `/merge-and-sync` | PRをmainにマージしてローカルをmainに同期 |
 | `/e2e-test` | E2Eテスト実行（QAエージェント） |
 | `/visual-regression` | 視覚的整合性検証（Designerエージェント） |
 | `/perf-audit` | パフォーマンス計測 |
