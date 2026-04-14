@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image from "next/image";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -9,7 +10,7 @@ interface KnowledgeCardProps {
 
 export function KnowledgeCard({ knowledge }: KnowledgeCardProps) {
   return (
-    <a
+    <Link
       href={`/knowledge/${knowledge.id}`}
       aria-label={`${knowledge.brand}の詳細を見る`}
       className="block transition-transform duration-200 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-500 focus-visible:ring-offset-2 rounded-xl"
@@ -55,6 +56,6 @@ export function KnowledgeCard({ knowledge }: KnowledgeCardProps) {
           )}
         </div>
       </Card>
-    </a>
+    </Link>
   );
 }

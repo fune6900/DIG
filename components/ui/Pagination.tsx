@@ -13,12 +13,18 @@ export function Pagination({ currentPage, totalPages, baseUrl }: PaginationProps
 
   if (totalPages <= 1) return null;
 
+  const buildUrl = (page: number) => {
+    const url = new URL(baseUrl, "http://localhost");
+    url.searchParams.set("page", String(page));
+    return `${url.pathname}?${url.searchParams.toString()}`;
+  };
+
   const handlePrev = () => {
-    router.push(`${baseUrl}&page=${currentPage - 1}`);
+    router.push(buildUrl(currentPage - 1));
   };
 
   const handleNext = () => {
-    router.push(`${baseUrl}&page=${currentPage + 1}`);
+    router.push(buildUrl(currentPage + 1));
   };
 
   return (
