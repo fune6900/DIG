@@ -198,14 +198,15 @@
 
 ## スラッシュコマンドとエージェントの対応
 
-| コマンド             | 呼び出すエージェント | タイミング               |
-| -------------------- | -------------------- | ------------------------ |
-| `/smart-commit`      | Benz                 | Step 5: 実装完了後       |
-| `/create-pr`         | Benz                 | Step 6: PR作成時         |
-| `/review-pr`         | Benz                 | Step 9: CIグリーン後     |
-| `/e2e-test`          | QA                   | Step 7: ローカル動作確認 |
-| `/visual-regression` | Designer             | Step 7: UI変更がある場合 |
-| `/perf-audit`        | Designer             | 必要に応じて             |
+| コマンド             | 呼び出すエージェント | タイミング                           |
+| -------------------- | -------------------- | ------------------------------------ |
+| `/smart-commit`      | Benz                 | Step 5: Evaluator PASS後             |
+| `/create-pr`         | Benz                 | Step 6: PR作成時                     |
+| `/review-pr`         | Benz                 | Step 9: CIグリーン後                 |
+| `/e2e-test`          | QA                   | Step 7: ローカル動作確認             |
+| `/visual-regression` | Designer             | Step 7: UI変更がある場合             |
+| `/perf-audit`        | Designer             | 必要に応じて                         |
+| （自動）             | Evaluator            | Step 4-5: Coder/Designer完了後・必須 |
 
 ---
 

@@ -1,4 +1,4 @@
-ヴィンテージ古着のナレッジ情報をMarkdown形式でローカルに保存し、NotionのナレッジベースページにもMCPで同期する。
+蒐集のメイド（sub-agent-knowledge）を起動し、ヴィンテージ古着のナレッジ情報をMarkdown形式でローカルに保存し、NotionのナレッジベースページにもMCPで同期する。
 
 ## 引数
 
@@ -62,37 +62,53 @@ notes: <補足情報（任意）>
 ---
 ```
 
-### Phase 3: Notion への同期
+### Phase 3: Notion へのページ作成
 
-Notion MCP を使って以下のページに追記する:
+Notion MCP を使って「古着のナレッジ倉庫」データベースに **1ナレッジ1ページ** で追加する。
 
-**同期先ページID**: `34218002-901a-8195-93b9-df0e88c875dd`
-**URL**: https://www.notion.so/34218002901a819593b9df0e88c875dd
+**同期先データソースID**: 環境変数 `NOTION_KNOWLEDGE_DATA_SOURCE_ID`
+**データベースURL**: 環境変数 `NOTION_KNOWLEDGE_DATABASE_URL`
+**格納ページURL**: 環境変数 `NOTION_KNOWLEDGE_PARENT_PAGE_URL`
 
-1. `mcp__notion__notion-fetch` でページの現在の内容を取得する
-2. `mcp__notion__notion-update-page` で「ナレッジ一覧」セクションに追記する
-3. 追記形式:
+1. `mcp__notion__notion-create-pages` で新規ページを作成する
+2. `parent` には `data_source_id` として環境変数 `NOTION_KNOWLEDGE_DATA_SOURCE_ID` の値を指定する
+3. `properties` に `名前` を以下の形式で設定する:
+   ```
+   <ブランド名> — <アイテム名>（<年代>）
+   ```
+4. `content` にナレッジの詳細を以下の形式で記述する:
 
 ```markdown
-### <ブランド名> — <アイテム名>（<年代>）
-
+**ブランド**: <ブランド名>
+**年代**: <年代>
 **更新日**: YYYY-MM-DD
 
-<識別ポイントの要約>
+## 識別ポイント
 
----
+| 種別   | パーツ名   | 特徴   |
+| ------ | ---------- | ------ |
+| <種別> | <パーツ名> | <説明> |
+
+## 相場
+
+<相場情報（省略可）>
+
+## 補足
+
+<補足情報（省略可）>
 ```
 
 ### Phase 4: 完了報告
 
 以下を報告する:
 
-- 保存したファイルパス
-- Notion ページ URL
-- 追記した内容の要約
+- 保存したローカルファイルパス
+- 作成した Notion ページの URL
+- ページタイトルと識別ポイントの要約
 
 ## 注意
 
 - 情報の信頼性をマスターに確認してから保存する
-- 既存エントリと重複する場合は上書きせず追記する
-- `NOTION_KNOWLEDGE_PAGE_ID` 環境変数が設定されている場合はその値を優先する
+- 同名エントリが既に存在する場合は新規作成せずマスターに確認する
+- Notion への作成先は常に環境変数 `NOTION_KNOWLEDGE_DATA_SOURCE_ID` の値を使用する
+- 環境変数が未設定の場合はマスターに設定を依頼してから実行する
