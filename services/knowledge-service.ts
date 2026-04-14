@@ -10,14 +10,30 @@ import {
   KnowledgeSearchResult,
 } from "@/types/knowledge";
 
-function parseIdentificationPoints(raw: Prisma.JsonValue): IdentificationPoint[] {
+function parseIdentificationPoints(
+  raw: Prisma.JsonValue,
+): IdentificationPoint[] {
   const parsed = z.array(IdentificationPointSchema).safeParse(raw);
   return parsed.success ? parsed.data : [];
 }
 
+type ItemWithIdentificationPoints = KnowledgeSummary & {
+  identificationPoints: { type: string; description: string }[];
+};
+
+export function filterByDetailType<T extends ItemWithIdentificationPoints>(
+  items: T[],
+  detailType: string | undefined,
+): T[] {
+  if (detailType === undefined) return items;
+  return items.filter((item) =>
+    item.identificationPoints.some((p) => p.type === detailType),
+  );
+}
+
 export const knowledgeService = {
   async search(input: KnowledgeSearchInput): Promise<KnowledgeSearchResult> {
-    const { query, brand, category, era, page, limit } = input;
+    const { query, brand, category, era, detailType, page, limit } = input;
     const skip = (page - 1) * limit;
 
     const where: Prisma.KnowledgeWhereInput = {
@@ -35,6 +51,23 @@ export const knowledgeService = {
         era ? { era } : {},
       ],
     };
+
+    // detailType が指定された場合、identificationPoints JSON 配列内の type フィールドで絞り込む
+    // Prisma の JSON path フィルタは配列要素の部分一致に対応していないため $queryRaw を使用
+    if (detailType) {
+      const matchingIds = await prisma.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM "Knowledge"
+        WHERE EXISTS (
+          SELECT 1 FROM jsonb_array_elements("identificationPoints") AS elem
+          WHERE elem->>'type' = ${detailType}
+        )
+      `;
+      const ids = matchingIds.map((r) => r.id);
+      where.AND = [
+        ...(Array.isArray(where.AND) ? where.AND : []),
+        { id: { in: ids } },
+      ];
+    }
 
     const [items, total] = await prisma.$transaction([
       prisma.knowledge.findMany({

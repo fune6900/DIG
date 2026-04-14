@@ -6,12 +6,16 @@ export const IDENTIFICATION_POINT_TYPES = [
   "素材",
   "シルエット",
   "ディテール",
+  "ジッパー",
+  "ボタン",
+  "ステッチ",
 ] as const;
 
 export const IdentificationPointSchema = z.object({
   type: z.enum(IDENTIFICATION_POINT_TYPES),
   description: z.string().min(1),
   imageHint: z.string().optional(),
+  partName: z.string().optional(),
 });
 export type IdentificationPoint = z.infer<typeof IdentificationPointSchema>;
 
@@ -44,6 +48,7 @@ export const KnowledgeSearchInputSchema = z.object({
   brand: z.string().max(100).optional(),
   category: z.string().optional(),
   era: z.string().optional(),
+  detailType: z.string().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(50).default(20),
 });
