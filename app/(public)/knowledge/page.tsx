@@ -30,16 +30,20 @@ interface KnowledgePageProps {
     q?: string;
     category?: string;
     era?: string;
+    detail?: string;
     page?: string;
   }>;
 }
 
-export default async function KnowledgePage({ searchParams }: KnowledgePageProps) {
+export default async function KnowledgePage({
+  searchParams,
+}: KnowledgePageProps) {
   const params = await searchParams;
   const result = await searchKnowledgeAction({
     query: params.q,
     category: params.category,
     era: params.era,
+    detailType: params.detail,
     page: params.page,
   });
 
@@ -54,6 +58,7 @@ export default async function KnowledgePage({ searchParams }: KnowledgePageProps
   if (params.q) baseParams.set("q", params.q);
   if (params.category) baseParams.set("category", params.category);
   if (params.era) baseParams.set("era", params.era);
+  if (params.detail) baseParams.set("detail", params.detail);
   const baseUrl = `/knowledge?${baseParams.toString()}`;
 
   return (
@@ -70,6 +75,7 @@ export default async function KnowledgePage({ searchParams }: KnowledgePageProps
           defaultQuery={params.q}
           defaultCategory={params.category}
           defaultEra={params.era}
+          defaultDetailType={params.detail}
           categories={CATEGORIES}
           eras={ERAS}
         />
