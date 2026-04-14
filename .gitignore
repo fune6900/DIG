@@ -55,4 +55,3 @@ playwright-report/
 test-results/
 
 # prisma
-prisma/migrations/
