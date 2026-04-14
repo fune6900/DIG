@@ -6,6 +6,17 @@
 
 ## リリースノート
 
+### v0.4.0 — 2026-04-14
+
+**ナレッジ更新Skill + Notion連携**
+
+- `/knowledge-update` スラッシュコマンドを追加。ブランド・年代・ディテール情報を対話形式で収集
+- `.claude/knowledge-base/brands/<ブランド名>.md` にMarkdown形式でローカル保存
+- Notion MCPで古着図鑑ナレッジベースページ（`34218002-901a-8195-93b9-df0e88c875dd`）に自動同期
+- `.env.example` に `NOTION_KNOWLEDGE_PAGE_ID` を追加
+
+---
+
 ### v0.3.0 — 2026-04-15
 
 **ブックマーク（マイ図鑑）**
