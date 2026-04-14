@@ -13,16 +13,17 @@ export function BookmarkList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (bookmarks.length === 0) {
-      setItems([]);
-      setLoading(false);
-      return;
-    }
-
     let cancelled = false;
 
     async function fetchAll() {
       setLoading(true);
+      if (bookmarks.length === 0) {
+        if (!cancelled) {
+          setItems([]);
+          setLoading(false);
+        }
+        return;
+      }
       const results = await Promise.all(
         bookmarks.map((b) => getKnowledgeByIdAction(b.knowledgeId)),
       );
