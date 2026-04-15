@@ -1,4 +1,7 @@
-import { IdentificationPoint, IDENTIFICATION_POINT_TYPES } from "@/types/knowledge";
+import {
+  IdentificationPoint,
+  IDENTIFICATION_POINT_TYPES,
+} from "@/types/knowledge";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
@@ -6,7 +9,9 @@ interface IdentificationPointListProps {
   points: IdentificationPoint[];
 }
 
-export function IdentificationPointList({ points }: IdentificationPointListProps) {
+export function IdentificationPointList({
+  points,
+}: IdentificationPointListProps) {
   if (points.length === 0) return null;
 
   const grouped = IDENTIFICATION_POINT_TYPES.reduce<
@@ -19,18 +24,20 @@ export function IdentificationPointList({ points }: IdentificationPointListProps
 
   return (
     <section className="space-y-4">
-      <h2 className="text-base font-semibold text-stone-800">年代識別ポイント</h2>
+      <h2 className="text-xs font-medium tracking-[0.2em] text-denim/60 uppercase dark:text-offwhite/50">
+        年代識別ポイント
+      </h2>
       {Object.entries(grouped).map(([type, typePoints]) => (
         <div key={type} className="space-y-2">
           <Badge>{type}</Badge>
           <div className="space-y-2">
             {typePoints.map((point, i) => (
               <Card key={i} className="p-3">
-                <p className="text-sm text-stone-700 leading-relaxed">
+                <p className="text-sm text-denim-dark/80 leading-relaxed dark:text-offwhite/80">
                   {point.description}
                 </p>
                 {point.imageHint && (
-                  <p className="mt-1 text-xs text-stone-400 italic">
+                  <p className="mt-1 text-xs text-denim/40 italic dark:text-offwhite/30">
                     {point.imageHint}
                   </p>
                 )}

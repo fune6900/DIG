@@ -40,17 +40,17 @@ export function DiagnosticFlowUI({ flow }: DiagnosticFlowUIProps) {
             return (
               <li
                 key={`${entry.nodeId}-${index}`}
-                className="rounded-lg border border-stone-200 bg-stone-100 px-4 py-3"
+                className="rounded-sm border border-denim/15 bg-offwhite-subtle px-4 py-3 dark:border-denim-light/15 dark:bg-canvas-subtle"
               >
-                <p className="text-xs font-medium text-stone-400">
-                  ステップ {index + 1}
+                <p className="text-xs font-medium tracking-widest text-denim/40 uppercase dark:text-offwhite/30">
+                  Step {index + 1}
                 </p>
                 {questionText && (
-                  <p className="mt-0.5 text-sm text-stone-500">
+                  <p className="mt-0.5 text-sm text-denim/60 dark:text-offwhite/50">
                     {questionText}
                   </p>
                 )}
-                <p className="mt-1 text-sm font-medium text-stone-600">
+                <p className="mt-1 text-sm font-medium text-denim dark:text-denim-light">
                   → {entry.chosenLabel}
                 </p>
               </li>
@@ -61,17 +61,17 @@ export function DiagnosticFlowUI({ flow }: DiagnosticFlowUIProps) {
 
       {/* 現在のノード */}
       {currentNode === undefined && (
-        <p className="text-sm text-red-500">
+        <p className="text-sm text-rust dark:text-rust-light">
           ノードが見つかりません: {currentNodeId}
         </p>
       )}
 
       {currentNode !== undefined && isQuestionNode(currentNode) && (
-        <div className="rounded-xl border border-stone-200 bg-stone-50 p-6">
-          <p className="mb-1 text-xs font-medium text-stone-400">
-            ステップ {history.length + 1}
+        <div className="rounded-sm border border-denim/20 bg-offwhite p-6 dark:border-denim-light/20 dark:bg-canvas-subtle">
+          <p className="mb-1 text-xs font-medium tracking-widest text-denim/40 uppercase dark:text-offwhite/30">
+            Step {history.length + 1}
           </p>
-          <p className="mb-4 text-base font-semibold text-stone-800">
+          <p className="mb-4 text-base font-bold text-denim-dark dark:text-offwhite">
             {currentNode.question}
           </p>
           <div className="space-y-2" role="group" aria-label="選択肢">
@@ -80,7 +80,7 @@ export function DiagnosticFlowUI({ flow }: DiagnosticFlowUIProps) {
                 key={option.nextNodeId}
                 type="button"
                 onClick={() => handleChoose(option.label, option.nextNodeId)}
-                className="w-full rounded-lg border border-stone-300 bg-white px-4 py-3 text-left text-sm text-stone-700 transition-colors hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-500 focus-visible:ring-offset-2"
+                className="w-full rounded-sm border border-denim/25 bg-offwhite-subtle px-4 py-3 text-left text-sm text-denim-dark transition-colors hover:border-denim hover:bg-offwhite focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2 dark:border-denim-light/25 dark:bg-canvas dark:text-offwhite dark:hover:border-denim-light dark:hover:bg-canvas-subtle"
               >
                 {option.label}
               </button>
@@ -90,18 +90,20 @@ export function DiagnosticFlowUI({ flow }: DiagnosticFlowUIProps) {
       )}
 
       {currentNode !== undefined && isResultNode(currentNode) && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-6">
-          <p className="mb-1 text-xs font-medium text-amber-600">判定結果</p>
-          <p className="text-2xl font-bold text-amber-900">
+        <div className="rounded-sm border border-denim bg-denim-dark p-6 dark:border-denim-light dark:bg-canvas">
+          <p className="mb-1 text-xs font-medium tracking-[0.2em] text-denim-light uppercase">
+            判定結果
+          </p>
+          <p className="font-display text-5xl tracking-widest text-offwhite">
             {currentNode.result.era}
           </p>
-          <p className="mt-2 text-sm text-amber-700">
+          <p className="mt-2 text-sm text-offwhite/60">
             {currentNode.result.rationale}
           </p>
           <button
             type="button"
             onClick={handleReset}
-            className="mt-6 rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm text-stone-700 transition-colors hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-500 focus-visible:ring-offset-2"
+            className="mt-6 rounded-sm border border-offwhite/30 bg-transparent px-4 py-2 text-sm text-offwhite/70 transition-colors hover:border-offwhite hover:text-offwhite focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offwhite focus-visible:ring-offset-2 focus-visible:ring-offset-denim-dark"
           >
             最初から
           </button>

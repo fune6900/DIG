@@ -24,12 +24,12 @@ export function BookmarkButton({ knowledgeId }: BookmarkButtonProps) {
       onClick={handleClick}
       aria-label="ブックマーク"
       aria-pressed={bookmarked}
-      className="rounded-full p-2 transition-colors duration-150 hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-500 focus-visible:ring-offset-2"
+      className="rounded-sm p-2 transition-colors duration-150 hover:bg-offwhite-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2 dark:hover:bg-canvas-subtle"
     >
       {bookmarked ? (
-        <StarFilledIcon className="h-6 w-6 text-amber-500" />
+        <StarFilledIcon className="h-6 w-6 text-rust dark:text-rust-light" />
       ) : (
-        <StarOutlineIcon className="h-6 w-6 text-stone-400" />
+        <StarOutlineIcon className="h-6 w-6 text-denim/30 dark:text-offwhite/30" />
       )}
     </button>
   );

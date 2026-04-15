@@ -12,10 +12,10 @@ export function KnowledgeList({ result, searchQuery }: KnowledgeListProps) {
   return (
     <section>
       <div className="mb-4 flex items-baseline gap-2">
-        <p className="text-sm text-stone-500">
+        <p className="text-sm text-denim/50 dark:text-offwhite/40">
           {searchQuery && (
             <>
-              <span className="font-medium text-stone-700">
+              <span className="font-medium text-denim dark:text-denim-light">
                 &ldquo;{searchQuery}&rdquo;
               </span>{" "}
               の検索結果&nbsp;/&nbsp;
@@ -28,7 +28,7 @@ export function KnowledgeList({ result, searchQuery }: KnowledgeListProps) {
       {items.length === 0 ? (
         <p
           data-testid="empty-state"
-          className="py-16 text-center text-stone-400"
+          className="py-16 text-center text-denim/30 dark:text-offwhite/30"
         >
           該当するアイテムが見つかりませんでした
         </p>

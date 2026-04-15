@@ -56,6 +56,11 @@ export function KnowledgeSearchForm({
     });
   };
 
+  const inputClass =
+    "w-full rounded-sm border border-denim/30 bg-offwhite px-3 py-2 text-sm text-denim-dark placeholder-denim/30 transition-colors focus:border-denim focus:outline-none focus:ring-1 focus:ring-denim dark:border-denim-light/30 dark:bg-canvas-subtle dark:text-offwhite dark:placeholder-offwhite/30 dark:focus:border-denim-light dark:focus:ring-denim-light";
+  const labelClass =
+    "mb-1 block text-xs font-medium tracking-wide text-denim/60 uppercase dark:text-offwhite/50";
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -63,10 +68,7 @@ export function KnowledgeSearchForm({
       className="flex flex-col gap-3 sm:flex-row sm:items-end"
     >
       <div className="flex-1">
-        <label
-          htmlFor="knowledge-search-input"
-          className="mb-1 block text-xs font-medium text-stone-500"
-        >
+        <label htmlFor="knowledge-search-input" className={labelClass}>
           キーワード
         </label>
         <input
@@ -76,22 +78,19 @@ export function KnowledgeSearchForm({
           role="searchbox"
           defaultValue={defaultQuery}
           placeholder="ブランド名・特徴で検索"
-          className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 placeholder-stone-400 transition-colors focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
+          className={inputClass}
         />
       </div>
 
       <div>
-        <label
-          htmlFor="knowledge-category-select"
-          className="mb-1 block text-xs font-medium text-stone-500"
-        >
+        <label htmlFor="knowledge-category-select" className={labelClass}>
           カテゴリ
         </label>
         <select
           id="knowledge-category-select"
           name="category"
           defaultValue={defaultCategory}
-          className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 transition-colors focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
+          className={inputClass}
         >
           <option value="">すべて</option>
           {categories.map((cat) => (
@@ -103,17 +102,14 @@ export function KnowledgeSearchForm({
       </div>
 
       <div>
-        <label
-          htmlFor="knowledge-era-select"
-          className="mb-1 block text-xs font-medium text-stone-500"
-        >
+        <label htmlFor="knowledge-era-select" className={labelClass}>
           年代
         </label>
         <select
           id="knowledge-era-select"
           name="era"
           defaultValue={defaultEra}
-          className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 transition-colors focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
+          className={inputClass}
         >
           <option value="">すべて</option>
           {eras.map((era) => (
@@ -125,17 +121,14 @@ export function KnowledgeSearchForm({
       </div>
 
       <div>
-        <label
-          htmlFor="knowledge-detail-type-select"
-          className="mb-1 block text-xs font-medium text-stone-500"
-        >
-          ディテール種別
+        <label htmlFor="knowledge-detail-type-select" className={labelClass}>
+          ディテール
         </label>
         <select
           id="knowledge-detail-type-select"
           name="detail"
           defaultValue={defaultDetailType}
-          className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 transition-colors focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
+          className={inputClass}
         >
           <option value="">すべて</option>
           {DETAIL_TYPES.map((type) => (
@@ -149,7 +142,7 @@ export function KnowledgeSearchForm({
       <button
         type="submit"
         disabled={isPending}
-        className="flex items-center justify-center gap-2 rounded-lg bg-stone-800 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex items-center justify-center gap-2 rounded-sm bg-denim px-5 py-2 text-sm font-medium tracking-widest text-offwhite uppercase transition-colors hover:bg-denim-dark disabled:cursor-not-allowed disabled:opacity-60 dark:bg-denim-light dark:hover:bg-denim"
       >
         {isPending && <Spinner />}
         検索

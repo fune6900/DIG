@@ -53,7 +53,6 @@ export default async function KnowledgePage({
 
   const data = result.data ?? { items: [], total: 0, page: 1, totalPages: 0 };
 
-  // Pagination に渡す baseUrl を構築（page パラメータを除いた部分）
   const baseParams = new URLSearchParams();
   if (params.q) baseParams.set("q", params.q);
   if (params.category) baseParams.set("category", params.category);
@@ -64,13 +63,15 @@ export default async function KnowledgePage({
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <header className="mb-8">
-        <h1 className="mb-1 text-2xl font-bold text-stone-900">古着図鑑</h1>
-        <p className="text-sm text-stone-500">
+        <h1 className="font-display mb-1 text-4xl tracking-widest text-denim-dark dark:text-offwhite">
+          古着図鑑
+        </h1>
+        <p className="text-sm text-denim/50 dark:text-offwhite/40">
           ブランド・年代・特徴から古着を調べる
         </p>
       </header>
 
-      <div className="mb-6 rounded-xl bg-stone-50 p-4 border border-stone-200">
+      <div className="mb-6 rounded-sm bg-offwhite-subtle p-4 border border-denim/15 dark:bg-canvas-subtle dark:border-denim-light/15">
         <KnowledgeSearchForm
           defaultQuery={params.q}
           defaultCategory={params.category}

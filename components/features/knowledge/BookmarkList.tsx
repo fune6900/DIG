@@ -56,7 +56,9 @@ export function BookmarkList() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <span className="text-stone-400 text-sm">読み込み中...</span>
+        <span className="text-denim/40 text-sm dark:text-offwhite/40">
+          読み込み中...
+        </span>
       </div>
     );
   }
@@ -64,10 +66,12 @@ export function BookmarkList() {
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <p className="text-stone-500">まだブックマークがありません</p>
+        <p className="text-denim/50 dark:text-offwhite/50">
+          まだブックマークがありません
+        </p>
         <Link
           href="/knowledge"
-          className="text-sm text-stone-700 underline underline-offset-4 hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-500 focus-visible:ring-offset-2 rounded"
+          className="text-sm text-denim underline underline-offset-4 hover:text-denim-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2 rounded dark:text-denim-light dark:hover:text-offwhite"
         >
           古着図鑑を見る
         </Link>

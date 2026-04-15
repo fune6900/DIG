@@ -11,7 +11,9 @@ export function KnowledgeDetail({ knowledge }: KnowledgeDetailProps) {
   return (
     <article className="mx-auto max-w-2xl space-y-6">
       <header className="space-y-3">
-        <h1 className="text-3xl font-bold text-stone-900">{knowledge.brand}</h1>
+        <h1 className="font-display text-4xl tracking-widest text-denim-dark dark:text-offwhite">
+          {knowledge.brand}
+        </h1>
         <div className="flex flex-wrap gap-2">
           <Badge>{knowledge.era}</Badge>
           <Badge variant="outline">{knowledge.category}</Badge>
@@ -24,7 +26,7 @@ export function KnowledgeDetail({ knowledge }: KnowledgeDetailProps) {
       </header>
 
       {knowledge.description && (
-        <p className="text-sm leading-relaxed text-stone-600">
+        <p className="text-sm leading-relaxed text-denim/70 dark:text-offwhite/60">
           {knowledge.description}
         </p>
       )}
@@ -33,7 +35,7 @@ export function KnowledgeDetail({ knowledge }: KnowledgeDetailProps) {
 
       <Link
         href="/knowledge"
-        className="inline-flex items-center gap-1 text-sm text-stone-500 underline-offset-2 hover:text-stone-800 hover:underline"
+        className="inline-flex items-center gap-1 text-sm text-denim/60 underline-offset-2 hover:text-denim hover:underline dark:text-offwhite/50 dark:hover:text-offwhite"
       >
         ← 一覧に戻る
       </Link>

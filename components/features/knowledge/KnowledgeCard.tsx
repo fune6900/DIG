@@ -13,11 +13,11 @@ export function KnowledgeCard({ knowledge }: KnowledgeCardProps) {
     <Link
       href={`/knowledge/${knowledge.id}`}
       aria-label={`${knowledge.brand}の詳細を見る`}
-      className="block transition-transform duration-200 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-500 focus-visible:ring-offset-2 rounded-xl"
+      className="block transition-transform duration-200 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2 rounded-sm"
     >
       <Card>
         {/* 画像エリア */}
-        <div className="relative h-44 w-full overflow-hidden rounded-t-xl bg-stone-100">
+        <div className="relative h-44 w-full overflow-hidden rounded-t-sm bg-denim-dark dark:bg-canvas">
           {knowledge.imageUrls[0] ? (
             <Image
               src={knowledge.imageUrls[0]}
@@ -31,14 +31,16 @@ export function KnowledgeCard({ knowledge }: KnowledgeCardProps) {
               data-testid="placeholder"
               className="flex h-full w-full items-center justify-center"
             >
-              <span className="text-stone-400 text-sm">画像なし</span>
+              <span className="text-offwhite/30 text-xs tracking-widest uppercase font-display">
+                No Image
+              </span>
             </div>
           )}
         </div>
 
         {/* 情報エリア */}
         <div className="p-4 space-y-2">
-          <p className="text-lg font-semibold text-stone-900 leading-tight">
+          <p className="text-base font-bold text-denim-dark dark:text-offwhite leading-tight tracking-wide">
             {knowledge.brand}
           </p>
           <div className="flex flex-wrap gap-1.5">
