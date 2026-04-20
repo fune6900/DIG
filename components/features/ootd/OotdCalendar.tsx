@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import type { OotdSummary } from "@/types/ootd";
 
@@ -45,14 +47,14 @@ const MONTH_NAMES = [
 
 export function OotdCalendar({ ootds, onSelect }: OotdCalendarProps) {
   const today = new Date();
-  const [state, setState] = React.useState<CalendarState>({
+  const [state, setState] = useState<CalendarState>({
     year: today.getFullYear(),
     month: today.getMonth(),
   });
 
   const calendarDays = buildCalendarDays(state.year, state.month);
 
-  const ootdByDate = React.useMemo(() => {
+  const ootdByDate = useMemo(() => {
     const map = new Map<string, OotdSummary>();
     for (const ootd of ootds) {
       const key = `${ootd.date.getFullYear()}-${String(ootd.date.getMonth() + 1).padStart(2, "0")}-${String(ootd.date.getDate()).padStart(2, "0")}`;
