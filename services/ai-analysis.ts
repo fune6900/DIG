@@ -24,6 +24,9 @@ export async function analyzeOutfit(
     apiKey: process.env.ANTHROPIC_API_KEY,
   });
 
+  // Anthropic SDK requires a literal union type for media_type.
+  // The caller (upload route) already validates that mimeType starts with "image/",
+  // so this cast is safe within the accepted subset of image formats.
   const validMimeType = mimeType as
     | "image/jpeg"
     | "image/png"

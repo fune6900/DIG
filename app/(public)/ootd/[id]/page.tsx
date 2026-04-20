@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { notFound } from "next/navigation";
 import { getOotdByIdAction } from "@/app/actions/ootd";
 import { OotdDetailPage } from "./OotdDetailPage";

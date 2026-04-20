@@ -252,6 +252,7 @@ describe("CreateOotdInputSchema", () => {
   });
 
   it("imageUrl が必須 — 欠落するとバリデーションエラーになる", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { imageUrl: _omit, ...withoutImageUrl } = validInput;
     const result = CreateOotdInputSchema.safeParse(withoutImageUrl);
     expect(result.success).toBe(false);

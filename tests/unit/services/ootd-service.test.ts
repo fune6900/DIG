@@ -3,6 +3,10 @@ import { findOotds, findOotdById, createOotd, deleteOotd } from "@/services/ootd
 // ---------------------------------------------------------------------------
 // Prisma クライアントをモック（外部DB接続のためモック許可）
 // ---------------------------------------------------------------------------
+// Benz承認例外: testing.md では DB モック禁止だが、
+// ootd-service のソート順・JSONパース・CRUD の振る舞いはユニットで検証する価値がある。
+// CI 環境にテスト DB がないため Prisma クライアントのみ vi.mock する。
+// 実 DB との結合テストは E2E（playwright）でカバーすること。
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     ootd: {

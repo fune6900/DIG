@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { listOotdsAction } from "@/app/actions/ootd";
 import { OotdListClient } from "./OotdListClient";
