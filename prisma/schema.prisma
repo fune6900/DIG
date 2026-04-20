@@ -25,3 +25,19 @@ model Knowledge {
   @@index([category])
   @@index([era])
 }
+
+model Ootd {
+  id            String   @id @default(uuid())
+  imageUrl      String
+  oneLiner      String
+  colorPalette  Json     // Array<{name: string, colorCode: string, percentage: number}>
+  styles        Json     // Array<{name: string, percentage: number}>
+  description   String
+  detectedItems Json     // Array<{name: string, imageHint?: string}>
+  date          DateTime @default(now())
+  tags          String[] // max 3
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([date])
+}
