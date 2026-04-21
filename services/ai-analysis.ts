@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { OotdAnalysisResultSchema } from "@/types/ootd";
 import type { OotdAnalysisResult } from "@/types/ootd";
 
@@ -20,48 +20,26 @@ export async function analyzeOutfit(
   imageBase64: string,
   mimeType: string,
 ): Promise<OotdAnalysisResult> {
-  const client = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
+  const model = genAI.getGenerativeModel({
+    model: "gemini-3.1-flash-lite-preview",
   });
 
-  // Anthropic SDK requires a literal union type for media_type.
-  // The caller (upload route) already validates that mimeType starts with "image/",
-  // so this cast is safe within the accepted subset of image formats.
-  const validMimeType = mimeType as
-    | "image/jpeg"
-    | "image/png"
-    | "image/gif"
-    | "image/webp";
-
-  const message = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: validMimeType,
-              data: imageBase64,
-            },
-          },
-          {
-            type: "text",
-            text: SYSTEM_PROMPT,
-          },
-        ],
+  const result = await model.generateContent([
+    {
+      inlineData: {
+        data: imageBase64,
+        mimeType,
       },
-    ],
-  });
+    },
+    SYSTEM_PROMPT,
+  ]);
 
-  const textContent = message.content.find((block) => block.type === "text");
-  if (!textContent || textContent.type !== "text") {
-    throw new Error("No text content in AI response");
-  }
+  const text = result.response.text().trim();
+  const jsonText = text.startsWith("```")
+    ? text.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "")
+    : text;
 
-  const parsed = JSON.parse(textContent.text) as unknown;
+  const parsed = JSON.parse(jsonText) as unknown;
   return OotdAnalysisResultSchema.parse(parsed);
 }

@@ -27,6 +27,7 @@ function parseDetectedItems(raw: Prisma.JsonValue) {
 function parseOotdRecord(record: {
   id: string;
   imageUrl: string;
+  stickerUrl: string | null;
   oneLiner: string;
   colorPalette: Prisma.JsonValue;
   styles: Prisma.JsonValue;
@@ -40,6 +41,7 @@ function parseOotdRecord(record: {
   return {
     id: record.id,
     imageUrl: record.imageUrl,
+    ...(record.stickerUrl ? { stickerUrl: record.stickerUrl } : {}),
     oneLiner: record.oneLiner,
     colorPalette: parseColorPalette(record.colorPalette),
     styles: parseStyles(record.styles),
@@ -73,6 +75,7 @@ export async function createOotd(
   const record = await prisma.ootd.create({
     data: {
       imageUrl: input.imageUrl,
+      stickerUrl: input.stickerUrl ?? null,
       oneLiner: input.oneLiner,
       colorPalette: input.colorPalette,
       styles: input.styles,

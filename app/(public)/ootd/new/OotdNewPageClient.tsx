@@ -20,7 +20,9 @@ export function OotdNewPageClient() {
   const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<OotdAnalysisResult | undefined>(undefined);
+  const [analysisResult, setAnalysisResult] = useState<
+    OotdAnalysisResult | undefined
+  >(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -36,8 +38,14 @@ export function OotdNewPageClient() {
       const formData = new FormData();
       formData.append("image", file);
 
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const json = (await res.json()) as { url?: string; error?: { message: string } };
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const json = (await res.json()) as {
+        url?: string;
+        error?: { message: string };
+      };
 
       if (!res.ok || !json.url) {
         throw new Error(json.error?.message ?? "アップロードに失敗しました");
@@ -45,7 +53,9 @@ export function OotdNewPageClient() {
 
       setUploadedUrl(json.url);
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "アップロードに失敗しました");
+      setErrorMessage(
+        err instanceof Error ? err.message : "アップロードに失敗しました",
+      );
       setPreviewUrl(null);
     } finally {
       setIsUploading(false);
@@ -77,7 +87,9 @@ export function OotdNewPageClient() {
 
       setAnalysisResult(json.data);
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "分析に失敗しました");
+      setErrorMessage(
+        err instanceof Error ? err.message : "分析に失敗しました",
+      );
       setIsModalOpen(false);
       setStep("upload");
     } finally {
@@ -102,8 +114,28 @@ export function OotdNewPageClient() {
     setErrorMessage(null);
 
     try {
+      // スティッカー画像を生成（失敗しても登録は続行）
+      let stickerUrl: string | undefined;
+      try {
+        const stickerRes = await fetch("/api/ootd/sticker", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrl: uploadedUrl }),
+        });
+        const stickerJson = (await stickerRes.json()) as {
+          data?: { stickerUrl: string };
+          error?: { message: string };
+        };
+        if (stickerRes.ok && stickerJson.data?.stickerUrl) {
+          stickerUrl = stickerJson.data.stickerUrl;
+        }
+      } catch {
+        // sticker generation failure is non-fatal
+      }
+
       const result = await createOotdAction({
         imageUrl: uploadedUrl,
+        stickerUrl,
         oneLiner: analysisResult.oneLiner,
         colorPalette: analysisResult.colorPalette,
         styles: analysisResult.styles,
@@ -118,7 +150,9 @@ export function OotdNewPageClient() {
 
       router.push("/ootd");
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "登録に失敗しました");
+      setErrorMessage(
+        err instanceof Error ? err.message : "登録に失敗しました",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -186,6 +220,7 @@ export function OotdNewPageClient() {
             className="sr-only"
             onChange={handleFileChange}
             aria-label="コーデ画像"
+            tabIndex={-1}
           />
 
           <button

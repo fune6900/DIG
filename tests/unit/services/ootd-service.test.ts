@@ -1,4 +1,9 @@
-import { findOotds, findOotdById, createOotd, deleteOotd } from "@/services/ootd-service";
+import {
+  findOotds,
+  findOotdById,
+  createOotd,
+  deleteOotd,
+} from "@/services/ootd-service";
 
 // ---------------------------------------------------------------------------
 // Prisma クライアントをモック（外部DB接続のためモック許可）
@@ -26,6 +31,7 @@ import { prisma } from "@/lib/prisma";
 const makeOotdRecord = (id: string, createdAt: Date) => ({
   id,
   imageUrl: "https://example.com/ootd.jpg",
+  stickerUrl: null,
   oneLiner: "今日のコーデ",
   colorPalette: [{ name: "インディゴ", colorCode: "#3B4D6B", percentage: 100 }],
   styles: [{ name: "ストリート", percentage: 100 }],
@@ -131,7 +137,9 @@ describe("createOotd", () => {
     const input = {
       imageUrl: "https://example.com/new-ootd.jpg",
       oneLiner: "新しいコーデ",
-      colorPalette: [{ name: "ブラック", colorCode: "#000000", percentage: 100 }],
+      colorPalette: [
+        { name: "ブラック", colorCode: "#000000", percentage: 100 },
+      ],
       styles: [{ name: "モード", percentage: 100 }],
       description: "全身黒コーデ",
       detectedItems: [{ name: "ブラックジャケット" }],
@@ -142,6 +150,7 @@ describe("createOotd", () => {
     const created = {
       ...input,
       id: "uuid-new",
+      stickerUrl: null,
       createdAt: new Date("2026-04-01T10:00:00Z"),
       updatedAt: new Date("2026-04-01T10:00:00Z"),
     };
@@ -171,6 +180,7 @@ describe("createOotd", () => {
     const created = {
       ...input,
       id: "uuid-created",
+      stickerUrl: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

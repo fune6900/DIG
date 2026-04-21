@@ -78,15 +78,17 @@ describe("OotdDetail", () => {
 
   it("tags が空配列のときタグセクションが空でも表示エラーにならない", () => {
     const noTagsOotd: Ootd = { ...mockOotd, tags: [] };
-    expect(() => render(<OotdDetail ootd={noTagsOotd} onDelete={vi.fn()} />)).not.toThrow();
+    expect(() =>
+      render(<OotdDetail ootd={noTagsOotd} onDelete={vi.fn()} />),
+    ).not.toThrow();
   });
 
   it("削除ボタンクリックで onDelete が呼ばれる", async () => {
     const onDelete = vi.fn();
     render(<OotdDetail ootd={mockOotd} onDelete={onDelete} />);
 
-    const deleteButton = screen.getByRole("button", { name: /削除/i });
-    await userEvent.click(deleteButton);
+    await userEvent.click(screen.getByRole("button", { name: "削除" }));
+    await userEvent.click(screen.getByRole("button", { name: "削除する" }));
 
     expect(onDelete).toHaveBeenCalledTimes(1);
   });
@@ -95,9 +97,11 @@ describe("OotdDetail", () => {
     const onDelete = vi.fn();
     render(<OotdDetail ootd={mockOotd} onDelete={onDelete} />);
 
-    const deleteButton = screen.getByRole("button", { name: /削除/i });
-    await userEvent.click(deleteButton);
+    await userEvent.click(screen.getByRole("button", { name: "削除" }));
+    await userEvent.click(screen.getByRole("button", { name: "削除する" }));
 
-    expect(onDelete).toHaveBeenCalledWith("123e4567-e89b-12d3-a456-426614174000");
+    expect(onDelete).toHaveBeenCalledWith(
+      "123e4567-e89b-12d3-a456-426614174000",
+    );
   });
 });

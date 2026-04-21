@@ -101,12 +101,18 @@ describe("StyleItemSchema", () => {
   });
 
   it("percentage が 0 未満でバリデーションエラーになる", () => {
-    const result = StyleItemSchema.safeParse({ name: "ストリート", percentage: -1 });
+    const result = StyleItemSchema.safeParse({
+      name: "ストリート",
+      percentage: -1,
+    });
     expect(result.success).toBe(false);
   });
 
   it("percentage が 100 超でバリデーションエラーになる", () => {
-    const result = StyleItemSchema.safeParse({ name: "ストリート", percentage: 101 });
+    const result = StyleItemSchema.safeParse({
+      name: "ストリート",
+      percentage: 101,
+    });
     expect(result.success).toBe(false);
   });
 });
@@ -131,7 +137,9 @@ describe("DetectedItemSchema", () => {
     });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.imageHint).toBe("vintage denim jacket with chest pocket");
+      expect(result.data.imageHint).toBe(
+        "vintage denim jacket with chest pocket",
+      );
     }
   });
 
@@ -177,9 +185,17 @@ describe("OotdSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("imageUrl が URL 形式でないとバリデーションエラーになる", () => {
-    const result = OotdSchema.safeParse({ ...validOotd, imageUrl: "not-a-url" });
+  it("imageUrl が空文字でバリデーションエラーになる", () => {
+    const result = OotdSchema.safeParse({ ...validOotd, imageUrl: "" });
     expect(result.success).toBe(false);
+  });
+
+  it("imageUrl に相対パスが許可される", () => {
+    const result = OotdSchema.safeParse({
+      ...validOotd,
+      imageUrl: "/uploads/abc.jpg",
+    });
+    expect(result.success).toBe(true);
   });
 
   it("oneLiner が空文字でバリデーションエラーになる", () => {
@@ -208,7 +224,10 @@ describe("OotdSchema", () => {
   });
 
   it("tags が 3 つでパースできる（上限境界値）", () => {
-    const result = OotdSchema.safeParse({ ...validOotd, tags: ["古着", "デニム", "90s"] });
+    const result = OotdSchema.safeParse({
+      ...validOotd,
+      tags: ["古着", "デニム", "90s"],
+    });
     expect(result.success).toBe(true);
   });
 
@@ -226,7 +245,10 @@ describe("OotdSchema", () => {
   });
 
   it("createdAt が Date 型でなければバリデーションエラーになる", () => {
-    const result = OotdSchema.safeParse({ ...validOotd, createdAt: "2026-03-15" });
+    const result = OotdSchema.safeParse({
+      ...validOotd,
+      createdAt: "2026-03-15",
+    });
     expect(result.success).toBe(false);
   });
 });
@@ -238,7 +260,9 @@ describe("CreateOotdInputSchema", () => {
   const validInput = {
     imageUrl: "https://example.com/ootd.jpg",
     oneLiner: "今日のコーデ",
-    colorPalette: [{ name: "インディゴ", colorCode: "#3B4D6B", percentage: 100 }],
+    colorPalette: [
+      { name: "インディゴ", colorCode: "#3B4D6B", percentage: 100 },
+    ],
     styles: [{ name: "ストリート", percentage: 100 }],
     description: "ヴィンテージデニムを主役にしたコーデ",
     detectedItems: [{ name: "デニムジャケット" }],
@@ -258,9 +282,20 @@ describe("CreateOotdInputSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("imageUrl が URL 形式でないとバリデーションエラーになる", () => {
-    const result = CreateOotdInputSchema.safeParse({ ...validInput, imageUrl: "not-a-url" });
+  it("imageUrl が空文字でバリデーションエラーになる", () => {
+    const result = CreateOotdInputSchema.safeParse({
+      ...validInput,
+      imageUrl: "",
+    });
     expect(result.success).toBe(false);
+  });
+
+  it("imageUrl に相対パスが許可される", () => {
+    const result = CreateOotdInputSchema.safeParse({
+      ...validInput,
+      imageUrl: "/uploads/abc.jpg",
+    });
+    expect(result.success).toBe(true);
   });
 
   it("tags が空配列でパースできる", () => {
@@ -288,7 +323,10 @@ describe("CreateOotdInputSchema", () => {
     // id を渡してもパースが成功するなら strip されていること、
     // 失敗するなら strict モードで弾いていること — どちらでも
     // 型定義上は id が input に含まれないことを確認する型レベルのテスト
-    const withId = { ...validInput, id: "123e4567-e89b-12d3-a456-426614174000" };
+    const withId = {
+      ...validInput,
+      id: "123e4567-e89b-12d3-a456-426614174000",
+    };
     const result = CreateOotdInputSchema.safeParse(withId);
     // strip または strict のいずれかで id が出力に含まれないことを確認
     if (result.success) {

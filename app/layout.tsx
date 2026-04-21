@@ -57,6 +57,12 @@ export default function RootLayout({
               >
                 マイ図鑑
               </Link>
+              <Link
+                href="/ootd"
+                className="rounded px-3 py-1.5 text-sm font-medium text-offwhite/70 transition-colors hover:bg-denim hover:text-offwhite focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offwhite/50"
+              >
+                #OOTD
+              </Link>
             </nav>
           </div>
         </header>

@@ -2,7 +2,12 @@ import { z } from "zod";
 
 export const ColorPaletteItemSchema = z.object({
   name: z.string().min(1),
-  colorCode: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "colorCode must be a valid hex color (e.g. #1A2B3C)"),
+  colorCode: z
+    .string()
+    .regex(
+      /^#[0-9A-Fa-f]{6}$/,
+      "colorCode must be a valid hex color (e.g. #1A2B3C)",
+    ),
   percentage: z.number().min(0).max(100),
 });
 export type ColorPaletteItem = z.infer<typeof ColorPaletteItemSchema>;
@@ -21,7 +26,8 @@ export type DetectedItem = z.infer<typeof DetectedItemSchema>;
 
 export const OotdSchema = z.object({
   id: z.string().uuid(),
-  imageUrl: z.string().url(),
+  imageUrl: z.string().min(1),
+  stickerUrl: z.string().min(1).optional(),
   oneLiner: z.string().min(1),
   colorPalette: z.array(ColorPaletteItemSchema),
   styles: z.array(StyleItemSchema),
@@ -35,7 +41,8 @@ export const OotdSchema = z.object({
 export type Ootd = z.infer<typeof OotdSchema>;
 
 export const CreateOotdInputSchema = z.object({
-  imageUrl: z.string().url(),
+  imageUrl: z.string().min(1),
+  stickerUrl: z.string().min(1).optional(),
   oneLiner: z.string().min(1),
   colorPalette: z.array(ColorPaletteItemSchema),
   styles: z.array(StyleItemSchema),
@@ -57,6 +64,7 @@ export type OotdListItem = z.infer<typeof OotdListItemSchema>;
 export const OotdSummarySchema = OotdSchema.pick({
   id: true,
   imageUrl: true,
+  stickerUrl: true,
   oneLiner: true,
   date: true,
   tags: true,
