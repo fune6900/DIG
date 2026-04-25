@@ -20,5 +20,13 @@ export function OotdDetailPage({ ootd }: OotdDetailPageProps) {
     router.push("/ootd");
   }
 
-  return <OotdDetail ootd={ootd} onDelete={handleDelete} />;
+  function handleBack() {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push("/ootd");
+  }
+
+  return <OotdDetail ootd={ootd} onDelete={handleDelete} onBack={handleBack} />;
 }

@@ -4,13 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { OotdCalendar } from "@/components/features/ootd/OotdCalendar";
 import { OotdStickerBook } from "@/components/features/ootd/OotdStickerBook";
+import { OotdDetailModal } from "@/components/features/ootd/OotdDetailModal";
 import {
   CalendarIcon,
   GridIcon,
   SortAscIcon,
   SortDescIcon,
 } from "@/components/ui/icons";
-import type { OotdSummary, SortOrder } from "@/types/ootd";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { getOotdByIdAction, deleteOotdAction } from "@/app/actions/ootd";
+import type { Ootd, OotdSummary, SortOrder } from "@/types/ootd";
 
 interface OotdListClientProps {
   ootds: OotdSummary[];
@@ -20,16 +23,49 @@ type ViewMode = "sticker" | "calendar";
 
 export function OotdListClient({ ootds }: OotdListClientProps) {
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [view, setView] = useState<ViewMode>("sticker");
   const [sort, setSort] = useState<SortOrder>("desc");
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [selectedOotd, setSelectedOotd] = useState<Ootd | null>(null);
 
   const sorted = [...ootds].sort((a, b) => {
     const diff = a.date.getTime() - b.date.getTime();
     return sort === "desc" ? -diff : diff;
   });
 
+  async function openModal(id: string) {
+    setSelectedOotd(null);
+    setModalLoading(true);
+    setModalOpen(true);
+    const result = await getOotdByIdAction(id);
+    if (result.error) {
+      setModalLoading(false);
+      return;
+    }
+    setSelectedOotd(result.data);
+    setModalLoading(false);
+  }
+
+  function closeModal() {
+    setModalOpen(false);
+  }
+
+  async function handleDelete(id: string) {
+    const result = await deleteOotdAction(id);
+    if (result.error) return;
+    setModalOpen(false);
+    router.refresh();
+  }
+
   function handleSelect(id: string) {
-    router.push(`/ootd/${id}`);
+    if (isMobile) {
+      void openModal(id);
+    } else {
+      router.push(`/ootd/${id}`);
+    }
   }
 
   return (
@@ -92,6 +128,14 @@ export function OotdListClient({ ootds }: OotdListClientProps) {
       ) : (
         <OotdCalendar ootds={ootds} onSelect={handleSelect} />
       )}
+
+      <OotdDetailModal
+        isOpen={modalOpen}
+        isLoading={modalLoading}
+        ootd={selectedOotd}
+        onClose={closeModal}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }

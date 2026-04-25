@@ -6,15 +6,17 @@ import { Badge } from "@/components/ui/Badge";
 import { OotdColorPalette } from "@/components/features/ootd/OotdColorPalette";
 import { OotdStyleGauge } from "@/components/features/ootd/OotdStyleGauge";
 import { OotdItemList } from "@/components/features/ootd/OotdItemList";
-import { CloseIcon, TrashIcon } from "@/components/ui/icons";
+import { OotdEvaluationRadar } from "@/components/features/ootd/OotdEvaluationRadar";
+import { ChevronLeftIcon, CloseIcon, TrashIcon } from "@/components/ui/icons";
 import type { Ootd } from "@/types/ootd";
 
 interface OotdDetailProps {
   ootd: Ootd;
   onDelete: (id: string) => void;
+  onBack?: () => void;
 }
 
-export function OotdDetail({ ootd, onDelete }: OotdDetailProps) {
+export function OotdDetail({ ootd, onDelete, onBack }: OotdDetailProps) {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const formattedDate = new Intl.DateTimeFormat("en-US", {
@@ -27,6 +29,17 @@ export function OotdDetail({ ootd, onDelete }: OotdDetailProps) {
     <>
       <article className="mx-auto max-w-2xl space-y-8">
         <header className="space-y-3">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label="戻る"
+              className="inline-flex items-center gap-1 text-xs font-medium tracking-widest uppercase text-denim/50 hover:text-denim dark:text-offwhite/40 dark:hover:text-offwhite transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2 rounded-sm"
+            >
+              <ChevronLeftIcon width={14} height={14} />
+              戻る
+            </button>
+          )}
           <h1 className="font-display text-3xl tracking-widest text-denim-dark dark:text-offwhite leading-tight">
             {ootd.oneLiner}
           </h1>
@@ -87,6 +100,15 @@ export function OotdDetail({ ootd, onDelete }: OotdDetailProps) {
               Items
             </h2>
             <OotdItemList items={ootd.detectedItems} />
+          </section>
+        )}
+
+        {ootd.radarScores && (
+          <section className="space-y-3">
+            <h2 className="text-xs font-bold tracking-widest uppercase text-denim/40 dark:text-offwhite/30">
+              Evaluation
+            </h2>
+            <OotdEvaluationRadar scores={ootd.radarScores} />
           </section>
         )}
 
