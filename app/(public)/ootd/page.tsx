@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { listOotdsAction } from "@/app/actions/ootd";
 import { OotdListClient } from "./OotdListClient";
+import { PlusIcon } from "@/components/ui/icons";
 import type { OotdSummary } from "@/types/ootd";
 
 export default async function OotdPage() {
@@ -34,9 +35,10 @@ export default async function OotdPage() {
         </div>
         <Link
           href="/ootd/new"
-          className="rounded-sm bg-denim px-4 py-2 text-sm font-medium tracking-widest text-offwhite hover:bg-denim-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
+          className="hidden md:inline-flex items-center gap-1.5 rounded-sm bg-denim px-4 py-2 text-sm font-medium tracking-widest text-offwhite hover:bg-denim-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
         >
-          + 追加
+          <PlusIcon width={14} height={14} />
+          追加
         </Link>
       </header>
 

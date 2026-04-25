@@ -52,11 +52,12 @@ test.describe("Phase 1: OOTD一覧ページ", () => {
     await expect(page.getByText("今日のコーデを記録する")).toBeVisible();
   });
 
-  test("「+ 追加」リンクが/ootd/newへ遷移する", async ({ page }) => {
-    await expect(page.getByRole("link", { name: "+ 追加" })).toHaveAttribute(
-      "href",
-      "/ootd/new",
-    );
+  test("「追加」リンクが/ootd/newへ遷移する", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/ootd");
+    await expect(
+      page.getByRole("link", { name: /追加/ }).first(),
+    ).toHaveAttribute("href", "/ootd/new");
   });
 
   test("シール手帳ボタンがデフォルトでアクティブ（aria-pressed=true）", async ({
@@ -190,13 +191,8 @@ test.describe("Phase 2: OOTD新規登録フロー", () => {
 });
 
 test.describe("Phase 3: 共通UX", () => {
-  test("ナビゲーション: 古着図鑑リンクが機能する", async ({ page }) => {
-    await page.goto("/ootd");
-    await page.getByRole("link", { name: "古着図鑑" }).click();
-    await expect(page).toHaveURL("/knowledge");
-  });
-
-  test("ナビゲーション: DIG.ロゴがトップへ遷移する", async ({ page }) => {
+  test("ナビゲーション: DIG.ロゴがトップへ遷移する（PC）", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/ootd");
     await page.getByRole("link", { name: "DIG." }).click();
     await expect(page).toHaveURL("/");
@@ -214,15 +210,32 @@ test.describe("Phase 3: 共通UX", () => {
     await expect(page).toHaveTitle(/404|Not Found/i);
   });
 
-  test("OOTDページはOOTDナビリンクがヘッダーに存在しない（既知の欠陥: 記録）", async ({
+  test("PC版ヘッダーに#OOTD・着こなし検索・追加リンクが揃っている", async ({
     page,
   }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/ootd");
-    const nav = page.getByRole("navigation");
-    // 現状のナビゲーションには /ootd リンクが存在しないことを事実として記録
-    const ootdNavLink = nav.getByRole("link", { name: /ootd|コーデ日記/i });
-    // このテストはリンク不在を記録するため、存在しないことをアサートする
-    await expect(ootdNavLink).toHaveCount(0);
+    const nav = page.getByRole("navigation", { name: "メインナビゲーション" });
+    await expect(nav.getByRole("link", { name: /#OOTD/ })).toBeVisible();
+    await expect(nav.getByRole("link", { name: /着こなし検索/ })).toBeVisible();
+    await expect(nav.getByRole("link", { name: /追加/ })).toBeVisible();
+  });
+
+  test("SP版ボトムナビゲーションに3ボタンが揃っている", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/ootd");
+    const bottomNav = page.getByRole("navigation", {
+      name: "ボトムナビゲーション",
+    });
+    await expect(
+      bottomNav.getByRole("link", { name: "着こなし検索" }),
+    ).toBeVisible();
+    await expect(
+      bottomNav.getByRole("link", { name: "OOTDを追加" }),
+    ).toBeVisible();
+    await expect(
+      bottomNav.getByRole("link", { name: "自分のOOTD一覧" }),
+    ).toBeVisible();
   });
 });
 

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { OotdColorPalette } from "@/components/features/ootd/OotdColorPalette";
 import { OotdStyleGauge } from "@/components/features/ootd/OotdStyleGauge";
 import { OotdItemList } from "@/components/features/ootd/OotdItemList";
+import { CloseIcon, TrashIcon } from "@/components/ui/icons";
 import type { Ootd } from "@/types/ootd";
 
 interface OotdDetailProps {
@@ -96,6 +97,7 @@ export function OotdDetail({ ootd, onDelete }: OotdDetailProps) {
             aria-label="削除"
             className="inline-flex items-center gap-1.5 rounded-sm px-4 py-2 text-sm font-medium text-rust dark:text-rust-light border border-rust/30 dark:border-rust-light/30 hover:bg-rust/5 dark:hover:bg-rust-light/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rust focus-visible:ring-offset-2"
           >
+            <TrashIcon width={14} height={14} />
             削除
           </button>
         </div>
@@ -134,8 +136,9 @@ export function OotdDetail({ ootd, onDelete }: OotdDetailProps) {
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
-                className="rounded-sm px-4 py-2 text-sm font-medium border border-denim/20 dark:border-offwhite/20 text-denim/70 dark:text-offwhite/60 hover:bg-denim/5 dark:hover:bg-offwhite/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
+                className="inline-flex items-center gap-1.5 rounded-sm px-4 py-2 text-sm font-medium border border-denim/20 dark:border-offwhite/20 text-denim/70 dark:text-offwhite/60 hover:bg-denim/5 dark:hover:bg-offwhite/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
               >
+                <CloseIcon width={14} height={14} />
                 キャンセル
               </button>
               <button
@@ -144,8 +147,9 @@ export function OotdDetail({ ootd, onDelete }: OotdDetailProps) {
                   setShowConfirm(false);
                   onDelete(ootd.id);
                 }}
-                className="rounded-sm px-4 py-2 text-sm font-medium bg-rust dark:bg-rust-light text-offwhite dark:text-canvas hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rust focus-visible:ring-offset-2"
+                className="inline-flex items-center gap-1.5 rounded-sm px-4 py-2 text-sm font-medium bg-rust dark:bg-rust-light text-offwhite dark:text-canvas hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rust focus-visible:ring-offset-2"
               >
+                <TrashIcon width={14} height={14} />
                 削除する
               </button>
             </div>

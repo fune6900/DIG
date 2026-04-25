@@ -58,3 +58,7 @@ test-results/
 # prisma
 public/uploads/
 .playwright-mcp/
+
+# local screenshots
+*.png
+.claude/scheduled_tasks.lock
