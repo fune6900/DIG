@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test";
  * #OOTD機能 E2Eテストスイート
  *
  * 対象フロー:
- *   一覧表示（シール手帳/カレンダー切り替え）→ 新規登録フロー（画像アップロード→AI分析→タグ登録）
+ *   一覧表示（コーデ/コーデカレンダー切り替え）→ 新規登録フロー（画像アップロード→AI分析→タグ登録）
  *   → 詳細表示 → 削除
  *
  * 注意: AI分析・実際のファイルアップロード・DB書き込みを伴うフローは
@@ -60,60 +60,67 @@ test.describe("Phase 1: OOTD一覧ページ", () => {
     ).toHaveAttribute("href", "/ootd/new");
   });
 
-  test("シール手帳ボタンがデフォルトでアクティブ（aria-pressed=true）", async ({
+  test("コーデボタンがデフォルトでアクティブ（aria-pressed=true）", async ({
     page,
   }) => {
-    const stickerBtn = page.getByRole("button", { name: "シール手帳" });
+    const stickerBtn = page.getByRole("button", {
+      name: "コーデ",
+      exact: true,
+    });
     await expect(stickerBtn).toBeVisible();
     await expect(stickerBtn).toHaveAttribute("aria-pressed", "true");
   });
 
-  test("カレンダーボタンが表示される", async ({ page }) => {
-    const calendarBtn = page.getByRole("button", { name: "カレンダー" });
+  test("コーデカレンダーボタンが表示される", async ({ page }) => {
+    const calendarBtn = page.getByRole("button", { name: "コーデカレンダー" });
     await expect(calendarBtn).toBeVisible();
     await expect(calendarBtn).toHaveAttribute("aria-pressed", "false");
   });
 
-  test("カレンダービューに切り替えると月カレンダーが表示される", async ({
+  test("コーデカレンダービューに切り替えると月カレンダーが表示される", async ({
     page,
   }) => {
-    await page.getByRole("button", { name: "カレンダー" }).click();
+    await page.getByRole("button", { name: "コーデカレンダー" }).click();
 
     // カレンダーボタンがアクティブになる
     await expect(
-      page.getByRole("button", { name: "カレンダー" }),
+      page.getByRole("button", { name: "コーデカレンダー" }),
     ).toHaveAttribute("aria-pressed", "true");
     await expect(
-      page.getByRole("button", { name: "シール手帳" }),
+      page.getByRole("button", { name: "コーデ", exact: true }),
     ).toHaveAttribute("aria-pressed", "false");
 
     // 月ナビゲーションが表示される
-    await expect(page.getByRole("heading", { level: 2 })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 3 })).toBeVisible();
     await expect(page.getByRole("button", { name: "前の月" })).toBeVisible();
     await expect(page.getByRole("button", { name: "次の月" })).toBeVisible();
   });
 
-  test("カレンダービューで現在月が表示される", async ({ page }) => {
-    await page.getByRole("button", { name: "カレンダー" }).click();
-    // 現在月・年の見出しが表示される（例: "April 2026"）
-    const heading = page.getByRole("heading", { level: 2 });
-    await expect(heading).toBeVisible();
-    const headingText = await heading.textContent();
-    expect(headingText).toBeTruthy();
-    // 月名と年の形式であることを確認
-    expect(headingText).toMatch(/[A-Za-z]+ \d{4}/);
-  });
-
-  test("シール手帳ビューに戻すと並び替えボタンが表示される", async ({
+  test("コーデカレンダービューで今日見出しと現在月が表示される", async ({
     page,
   }) => {
-    await page.getByRole("button", { name: "カレンダー" }).click();
-    await page.getByRole("button", { name: "シール手帳" }).click();
+    await page.getByRole("button", { name: "コーデカレンダー" }).click();
+    // 1段目: 今日の曜日と日付が表示される（例: "Sat. April 22, 2026"）
+    const todayHeading = page.getByRole("heading", { level: 2 });
+    await expect(todayHeading).toBeVisible();
+    const todayText = await todayHeading.textContent();
+    expect(todayText).toMatch(/[A-Z][a-z]+\.\s+[A-Za-z]+\s+\d{1,2},\s+\d{4}/);
+
+    // 3段目: 月見出し
+    const monthHeading = page.getByRole("heading", { level: 3 });
+    await expect(monthHeading).toBeVisible();
+    const monthText = await monthHeading.textContent();
+    expect(monthText).toMatch(/[A-Za-z]+ \d{4}/);
+  });
+
+  test("コーデビューに戻すと並び替えボタンが表示される", async ({ page }) => {
+    await page.getByRole("button", { name: "コーデカレンダー" }).click();
+    await page.getByRole("button", { name: "コーデ", exact: true }).click();
 
     await expect(
-      page.getByRole("button", { name: "シール手帳" }),
+      page.getByRole("button", { name: "コーデ", exact: true }),
     ).toHaveAttribute("aria-pressed", "true");
-    // 並び替えボタンがシール手帳ビューのみ表示
+    // 並び替えボタンはコーデビューのみ表示
     const sortBtn = page.getByRole("button", { name: /並び替え/ });
     await expect(sortBtn).toBeVisible();
   });
