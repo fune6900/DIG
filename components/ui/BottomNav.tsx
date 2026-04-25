@@ -6,7 +6,7 @@ import { ClockIcon, PlusIcon, UserIcon } from "@/components/ui/icons";
 
 export function BottomNav() {
   const pathname = usePathname();
-  if (pathname?.startsWith("/ootd/new")) {
+  if (pathname === "/ootd/new" || pathname?.startsWith("/ootd/new/")) {
     return null;
   }
 
