@@ -24,6 +24,35 @@ export const DetectedItemSchema = z.object({
 });
 export type DetectedItem = z.infer<typeof DetectedItemSchema>;
 
+export const RADAR_AXES = [
+  "casual",
+  "subdued",
+  "presence",
+  "subtle",
+  "formal",
+  "colorful",
+] as const;
+export type RadarAxis = (typeof RADAR_AXES)[number];
+
+export const RADAR_AXIS_LABELS: Record<RadarAxis, string> = {
+  casual: "カジュアル",
+  subdued: "落ち着いたトーン",
+  presence: "存在感のある",
+  subtle: "さりげない",
+  formal: "フォーマル",
+  colorful: "カラフル",
+};
+
+export const EvaluationRadarSchema = z.object({
+  casual: z.number().min(0).max(100),
+  subdued: z.number().min(0).max(100),
+  presence: z.number().min(0).max(100),
+  subtle: z.number().min(0).max(100),
+  formal: z.number().min(0).max(100),
+  colorful: z.number().min(0).max(100),
+});
+export type EvaluationRadar = z.infer<typeof EvaluationRadarSchema>;
+
 export const OotdSchema = z.object({
   id: z.string().uuid(),
   imageUrl: z.string().min(1),
@@ -33,6 +62,7 @@ export const OotdSchema = z.object({
   styles: z.array(StyleItemSchema),
   description: z.string().min(1),
   detectedItems: z.array(DetectedItemSchema),
+  radarScores: EvaluationRadarSchema.optional(),
   date: z.date(),
   tags: z.array(z.string()).max(3),
   createdAt: z.date(),
@@ -48,6 +78,7 @@ export const CreateOotdInputSchema = z.object({
   styles: z.array(StyleItemSchema),
   description: z.string().min(1),
   detectedItems: z.array(DetectedItemSchema),
+  radarScores: EvaluationRadarSchema.optional(),
   tags: z.array(z.string()).max(3),
 });
 export type CreateOotdInput = z.infer<typeof CreateOotdInputSchema>;
@@ -78,6 +109,7 @@ export const OotdAnalysisResultSchema = z.object({
   styles: z.array(StyleItemSchema),
   description: z.string().min(1),
   detectedItems: z.array(DetectedItemSchema),
+  radarScores: EvaluationRadarSchema.optional(),
 });
 export type OotdAnalysisResult = z.infer<typeof OotdAnalysisResultSchema>;
 

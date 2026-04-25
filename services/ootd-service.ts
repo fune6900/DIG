@@ -3,6 +3,7 @@ import {
   ColorPaletteItemSchema,
   StyleItemSchema,
   DetectedItemSchema,
+  EvaluationRadarSchema,
   CreateOotdInput,
 } from "@/types/ootd";
 import type { Ootd, SortOrder } from "@/types/ootd";
@@ -24,6 +25,12 @@ function parseDetectedItems(raw: Prisma.JsonValue) {
   return parsed.success ? parsed.data : [];
 }
 
+function parseRadarScores(raw: Prisma.JsonValue | null) {
+  if (raw === null) return undefined;
+  const parsed = EvaluationRadarSchema.safeParse(raw);
+  return parsed.success ? parsed.data : undefined;
+}
+
 function parseOotdRecord(record: {
   id: string;
   imageUrl: string;
@@ -33,11 +40,13 @@ function parseOotdRecord(record: {
   styles: Prisma.JsonValue;
   description: string;
   detectedItems: Prisma.JsonValue;
+  radarScores: Prisma.JsonValue | null;
   date: Date;
   tags: string[];
   createdAt: Date;
   updatedAt: Date;
 }): Ootd {
+  const radarScores = parseRadarScores(record.radarScores);
   return {
     id: record.id,
     imageUrl: record.imageUrl,
@@ -47,6 +56,7 @@ function parseOotdRecord(record: {
     styles: parseStyles(record.styles),
     description: record.description,
     detectedItems: parseDetectedItems(record.detectedItems),
+    ...(radarScores ? { radarScores } : {}),
     date: record.date,
     tags: record.tags,
     createdAt: record.createdAt,
@@ -81,6 +91,7 @@ export async function createOotd(
       styles: input.styles,
       description: input.description,
       detectedItems: input.detectedItems,
+      radarScores: input.radarScores ?? Prisma.JsonNull,
       tags: input.tags,
       ...(input.date !== undefined ? { date: input.date } : {}),
     },

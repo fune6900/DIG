@@ -14,6 +14,7 @@ model Ootd {
   styles        Json
   description   String
   detectedItems Json
+  radarScores   Json?
   date          DateTime @default(now())
   tags          String[]
   createdAt     DateTime @default(now())

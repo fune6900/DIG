@@ -37,6 +37,7 @@ const makeOotdRecord = (id: string, createdAt: Date) => ({
   styles: [{ name: "ストリート", percentage: 100 }],
   description: "ヴィンテージデニムを主役にしたコーデ",
   detectedItems: [{ name: "デニムジャケット" }],
+  radarScores: null,
   date: new Date("2026-03-15"),
   tags: ["古着"],
   createdAt,
@@ -151,6 +152,7 @@ describe("createOotd", () => {
       ...input,
       id: "uuid-new",
       stickerUrl: null,
+      radarScores: null,
       createdAt: new Date("2026-04-01T10:00:00Z"),
       updatedAt: new Date("2026-04-01T10:00:00Z"),
     };
@@ -181,6 +183,7 @@ describe("createOotd", () => {
       ...input,
       id: "uuid-created",
       stickerUrl: null,
+      radarScores: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
