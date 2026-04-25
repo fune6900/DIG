@@ -6,23 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-model Knowledge {
-  id                   String   @id @default(uuid())
-  brand                String
-  category             String
-  era                  String
-  description          String?
-  tags                 String[]
-  identificationPoints Json
-  imageUrls            String[]
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-
-  @@index([brand])
-  @@index([category])
-  @@index([era])
-}
-
 model Ootd {
   id            String   @id @default(uuid())
   imageUrl      String

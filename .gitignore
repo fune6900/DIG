@@ -58,3 +58,7 @@ test-results/
 # prisma
 public/uploads/
 .playwright-mcp/
+
+# local screenshots (root-level only — keep public/**/*.png trackable)
+/*.png
+.claude/scheduled_tasks.lock

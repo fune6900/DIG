@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { CheckIcon, PlusIcon } from "@/components/ui/icons";
+import { Spinner } from "@/components/ui/Spinner";
 import type { OotdAnalysisResult } from "@/types/ootd";
 
 interface OotdRegisterFormProps {
@@ -74,7 +76,10 @@ export function OotdRegisterForm({
 
       <div className="space-y-2">
         <label className="text-xs font-bold tracking-widest uppercase text-denim/40 dark:text-offwhite/30">
-          Tags <span className="text-denim/30 dark:text-offwhite/20 normal-case tracking-normal">（最大{MAX_TAGS}つ）</span>
+          Tags{" "}
+          <span className="text-denim/30 dark:text-offwhite/20 normal-case tracking-normal">
+            （最大{MAX_TAGS}つ）
+          </span>
         </label>
         <div className="flex gap-2">
           <input
@@ -91,8 +96,9 @@ export function OotdRegisterForm({
             type="button"
             onClick={handleAddTag}
             disabled={tags.length >= MAX_TAGS || !tagInput.trim()}
-            className="rounded-sm bg-denim px-4 py-2 text-sm font-medium text-offwhite hover:bg-denim-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
+            className="inline-flex items-center gap-1.5 rounded-sm bg-denim px-4 py-2 text-sm font-medium text-offwhite hover:bg-denim-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
           >
+            <PlusIcon width={14} height={14} />
             追加
           </button>
         </div>
@@ -121,9 +127,19 @@ export function OotdRegisterForm({
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full rounded-sm bg-denim py-3 text-sm font-medium tracking-widest text-offwhite hover:bg-denim-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-sm bg-denim py-3 text-sm font-medium tracking-widest text-offwhite hover:bg-denim-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
       >
-        {isSubmitting ? "登録中..." : "追加する"}
+        {isSubmitting ? (
+          <>
+            <Spinner size="sm" variant="light" />
+            登録中...
+          </>
+        ) : (
+          <>
+            <CheckIcon width={16} height={16} />
+            追加する
+          </>
+        )}
       </button>
     </form>
   );

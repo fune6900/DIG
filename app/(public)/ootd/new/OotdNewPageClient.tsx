@@ -6,6 +6,8 @@ import Image from "next/image";
 import { OotdAnalysisModal } from "@/components/features/ootd/OotdAnalysisModal";
 import { OotdRegisterForm } from "@/components/features/ootd/OotdRegisterForm";
 import { createOotdAction } from "@/app/actions/ootd";
+import { ImageIcon, SparkleIcon } from "@/components/ui/icons";
+import { Spinner } from "@/components/ui/Spinner";
 import type { OotdAnalysisResult } from "@/types/ootd";
 
 type Step = "upload" | "analysis" | "register";
@@ -189,24 +191,14 @@ export function OotdNewPageClient() {
               </div>
             ) : (
               <>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="40"
-                  height="40"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                <ImageIcon
+                  width={40}
+                  height={40}
+                  strokeWidth={1.5}
                   className="text-denim/30 dark:text-offwhite/30"
-                  aria-hidden="true"
-                >
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-                <p className="text-sm text-denim/50 dark:text-offwhite/40">
+                />
+                <p className="inline-flex items-center gap-1.5 text-sm text-denim/50 dark:text-offwhite/40">
+                  <ImageIcon width={14} height={14} />
                   タップして画像を選択
                 </p>
               </>
@@ -227,9 +219,19 @@ export function OotdNewPageClient() {
             type="button"
             onClick={handleAnalyze}
             disabled={!uploadedUrl || isUploading}
-            className="w-full rounded-sm bg-denim py-3 text-sm font-medium tracking-widest text-offwhite hover:bg-denim-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-sm bg-denim py-3 text-sm font-medium tracking-widest text-offwhite hover:bg-denim-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
           >
-            {isUploading ? "アップロード中..." : "AIで分析する"}
+            {isUploading ? (
+              <>
+                <Spinner size="sm" variant="light" />
+                アップロード中...
+              </>
+            ) : (
+              <>
+                <SparkleIcon width={16} height={16} />
+                AIで分析する
+              </>
+            )}
           </button>
         </div>
       )}

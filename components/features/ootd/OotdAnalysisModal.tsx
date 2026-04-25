@@ -6,6 +6,7 @@ import { OotdColorPalette } from "@/components/features/ootd/OotdColorPalette";
 import { OotdStyleGauge } from "@/components/features/ootd/OotdStyleGauge";
 import { OotdRadarChart } from "@/components/features/ootd/OotdRadarChart";
 import { OotdItemList } from "@/components/features/ootd/OotdItemList";
+import { ArrowRightIcon, CloseIcon } from "@/components/ui/icons";
 import type { OotdAnalysisResult } from "@/types/ootd";
 
 interface OotdAnalysisModalProps {
@@ -56,7 +57,7 @@ export function OotdAnalysisModal({
       >
         {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-4 min-h-[16rem] px-6 py-12">
-            <Spinner />
+            <Spinner size="lg" />
             <p className="text-sm text-denim/60 dark:text-offwhite/50 animate-pulse">
               AIがコーデを分析中...
             </p>
@@ -73,21 +74,7 @@ export function OotdAnalysisModal({
                 aria-label="閉じる"
                 className="shrink-0 rounded-sm p-1 text-denim/40 hover:text-denim dark:text-offwhite/40 dark:hover:text-offwhite transition-colors"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <CloseIcon width={20} height={20} />
               </button>
             </div>
 
@@ -139,9 +126,10 @@ export function OotdAnalysisModal({
             <button
               type="button"
               onClick={onNext}
-              className="w-full rounded-sm bg-denim py-3 text-sm font-medium tracking-widest text-offwhite hover:bg-denim-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-sm bg-denim py-3 text-sm font-medium tracking-widest text-offwhite hover:bg-denim-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
             >
               次へ
+              <ArrowRightIcon width={16} height={16} />
             </button>
           </div>
         ) : null}
