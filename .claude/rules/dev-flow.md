@@ -153,6 +153,25 @@ npm test -- --run  # ユニットテスト全件グリーン確認
 UI変更がある場合は `/visual-regression` を実行する。
 フロー全体に変更がある場合は `/e2e-test` を実行する。
 
+### 7-1. スクショの後始末【必須】
+
+検証目的で撮影したスクリーンショットは**作業完了直前に必ず削除する**。
+
+- Playwright MCP / Chrome DevTools MCP / 手動撮影で生成された PNG・JPEG はリポジトリに残さない
+- 削除対象の例:
+  - リポジトリ直下の `*.png` / `*.jpeg`（`pc-*.png`、`sp-*.png`、`*-screenshot.png` 等）
+  - 一時的な検証用画像（仕様参照画像 `image.png` も含む）
+- `public/` 配下の本番アセットや `tests/**/__snapshots__/` の Vitest スナップショットは削除しない
+- 撮影 → 確認 → 削除 までを1セットで完了させる。「あとで消す」は禁止
+
+```bash
+# 例: ルート直下の検証スクショを一掃
+ls -1 *.png *.jpeg 2>/dev/null
+rm *.png *.jpeg 2>/dev/null
+```
+
+`/smart-commit` 実行前に `git status` で残骸が無いことを確認する。
+
 **参照**: `@.claude/rules/testing.md`
 
 ---
