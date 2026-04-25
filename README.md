@@ -6,6 +6,21 @@
 
 ## リリースノート
 
+### v0.7.0 — 2026-04-26
+
+**6軸評価レーダー基盤 + Notion 出典の AI プロンプト刷新**
+
+- `EvaluationRadar` スキーマを追加（casual / subdued / presence / subtle / formal / colorful の0〜100 スコア）。`Ootd` / `OotdAnalysisResult` / `CreateOotdInput` に optional で組み込み
+- Prisma `Ootd` モデルに `radarScores Json?` を追加（既存レコードは null 許容）
+- `services/ai-analysis.ts` のプロンプトを Notion 出典の few-shot に刷新
+  - `そのコーデを一言で表した言葉.md` の語彙・文学的トーンを `oneLiner` に継承
+  - `コーデを構成する説明文（DESCRIPTION）.md` の分析的・サブカル参照スタイルを `description` に継承
+  - 同時に 6 軸 `radarScores` を生成するよう指示
+- 新規 OOTD 登録フローで `radarScores` を `createOotdAction` にそのまま転送
+- `EvaluationRadarSchema` に対するスキーマテストを追加
+
+---
+
 ### v0.6.0 — 2026-04-25
 
 **#OOTD一覧のラベル整理 + コーデカレンダー3段リデザイン**
