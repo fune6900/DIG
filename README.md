@@ -1,10 +1,24 @@
 # DIG（ディグ）
 
-古着フリーク向けのナレッジ & バーチャル試着・コーデ日記プラットフォーム。
+今日のコーデを記録・振り返るプラットフォーム。AI分析でスタイル・カラー・アイテムを自動抽出。
 
 ---
 
 ## リリースノート
+
+### v0.5.0 — 2026-04-25
+
+**#OOTD中心への再構成 + ボトムナビ + デバイス別起動画面**
+
+- 古着図鑑・年代判別・マイ図鑑機能を全削除（route・component・service・types・hook・lib・test 一括）
+- 起動画面を device-aware 化: PC=トップ、SP=`/ootd`（`proxy.ts` UA判定 + クライアント側 `MobileRedirect` フォールバック）
+- SP専用ボトムナビゲーション追加（左:着こなし検索 / 中央:+OOTD追加 / 右:自分=OOTD一覧）。`/ootd/new` では非表示
+- 共通アイコンライブラリ `components/ui/icons.tsx` を導入し、全アクションボタンの左横にアイコンを付与
+- ルートレベルローディング追加（`app/loading.tsx`、`app/(public)/ootd/loading.tsx`、`app/(public)/ootd/[id]/loading.tsx`）+ `Spinner` の size/variant 対応 + `FullScreenLoader`
+- 着こなし検索の仮ページ `/search` を追加
+- Prismaから `Knowledge` モデルを削除
+
+---
 
 ### v0.4.0 — 2026-04-14
 
