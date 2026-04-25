@@ -228,10 +228,8 @@ export function OotdCalendar({ ootds, onSelect }: OotdCalendarProps) {
 
             const dateKey = `${state.year}-${String(state.month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
             const ootd = ootdByDate.get(dateKey);
-            const isToday =
-              day === today.getDate() &&
-              state.month === today.getMonth() &&
-              state.year === today.getFullYear();
+            const cellDate = new Date(state.year, state.month, day);
+            const isToday = isSameDate(cellDate, today);
 
             return (
               <div
