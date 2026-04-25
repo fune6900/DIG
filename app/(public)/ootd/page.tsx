@@ -9,18 +9,17 @@ import type { OotdSummary } from "@/types/ootd";
 export default async function OotdPage() {
   const result = await listOotdsAction({ sort: "desc" });
 
-  if (result.error) {
-    throw new Error(result.error.message);
-  }
-
-  const ootds: OotdSummary[] = (result.data ?? []).map((ootd) => ({
-    id: ootd.id,
-    imageUrl: ootd.imageUrl,
-    oneLiner: ootd.oneLiner,
-    date: ootd.date,
-    tags: ootd.tags,
-    createdAt: ootd.createdAt,
-  }));
+  const ootds: OotdSummary[] = result.error
+    ? []
+    : (result.data ?? []).map((ootd) => ({
+        id: ootd.id,
+        imageUrl: ootd.imageUrl,
+        stickerUrl: ootd.stickerUrl,
+        oneLiner: ootd.oneLiner,
+        date: ootd.date,
+        tags: ootd.tags,
+        createdAt: ootd.createdAt,
+      }));
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
@@ -42,7 +41,24 @@ export default async function OotdPage() {
         </Link>
       </header>
 
-      <OotdListClient ootds={ootds} />
+      {result.error ? (
+        <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center">
+          <p className="text-sm font-medium text-rust dark:text-rust-light">
+            データの読み込みに失敗しました
+          </p>
+          <p className="text-xs text-denim/40 dark:text-offwhite/30">
+            しばらく待ってから再度お試しください
+          </p>
+          <Link
+            href="/ootd"
+            className="mt-1 text-xs font-medium tracking-widest uppercase text-denim/50 underline hover:text-denim dark:text-offwhite/40 dark:hover:text-offwhite transition-colors"
+          >
+            再読み込み
+          </Link>
+        </div>
+      ) : (
+        <OotdListClient ootds={ootds} />
+      )}
     </main>
   );
 }
