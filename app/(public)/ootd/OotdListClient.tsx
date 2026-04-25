@@ -48,7 +48,7 @@ export function OotdListClient({ ootds }: OotdListClientProps) {
             ].join(" ")}
           >
             <GridIcon width={14} height={14} />
-            シール手帳
+            コーデ
           </button>
           <button
             type="button"
@@ -62,7 +62,7 @@ export function OotdListClient({ ootds }: OotdListClientProps) {
             ].join(" ")}
           >
             <CalendarIcon width={14} height={14} />
-            カレンダー
+            コーデカレンダー
           </button>
         </div>
 

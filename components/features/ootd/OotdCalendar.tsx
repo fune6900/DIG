@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
 import type { OotdSummary } from "@/types/ootd";
 
 interface OotdCalendarProps {
@@ -37,22 +38,52 @@ function buildCalendarDays(year: number, month: number): (number | null)[] {
   return days;
 }
 
+function buildThisWeek(today: Date): Date[] {
+  const start = new Date(today);
+  start.setDate(today.getDate() - today.getDay());
+  start.setHours(0, 0, 0, 0);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    return d;
+  });
+}
+
+function isSameDate(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WEEKDAY_LABELS_SHORT = ["S", "M", "T", "W", "T", "F", "S"];
 
 const MONTH_NAMES = [
-  "January", "February", "March", "April",
-  "May", "June", "July", "August",
-  "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 export function OotdCalendar({ ootds, onSelect }: OotdCalendarProps) {
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
   const [state, setState] = useState<CalendarState>({
     year: today.getFullYear(),
     month: today.getMonth(),
   });
 
   const calendarDays = buildCalendarDays(state.year, state.month);
+  const weekDays = useMemo(() => buildThisWeek(today), [today]);
 
   const ootdByDate = useMemo(() => {
     const map = new Map<string, OotdSummary>();
@@ -83,137 +114,173 @@ export function OotdCalendar({ ootds, onSelect }: OotdCalendarProps) {
     });
   }
 
+  const todayWeekday = WEEKDAY_LABELS[today.getDay()];
+  const todayLabel = `${todayWeekday}. ${MONTH_NAMES[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`;
+
   return (
-    <div className="space-y-3">
-      {/* ヘッダー: 月ナビゲーション */}
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={handlePrevMonth}
-          aria-label="前の月"
-          className="rounded-sm p-1.5 text-denim/50 hover:text-denim dark:text-offwhite/40 dark:hover:text-offwhite transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-
-        <h2 className="font-display text-xl tracking-widest text-denim-dark dark:text-offwhite">
-          {MONTH_NAMES[state.month]} {state.year}
+    <div className="space-y-6">
+      {/* 1段目: 今日の曜日と日付 */}
+      <header className="space-y-1">
+        <p className="text-[11px] font-medium tracking-[0.3em] uppercase text-denim/40 dark:text-offwhite/30">
+          Today
+        </p>
+        <h2 className="font-display text-2xl sm:text-3xl tracking-widest text-denim-dark dark:text-offwhite">
+          {todayLabel}
         </h2>
+      </header>
 
-        <button
-          type="button"
-          onClick={handleNextMonth}
-          aria-label="次の月"
-          className="rounded-sm p-1.5 text-denim/50 hover:text-denim dark:text-offwhite/40 dark:hover:text-offwhite transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
-      </div>
-
-      {/* 曜日ヘッダー */}
-      <div className="grid grid-cols-7 gap-px">
-        {WEEKDAY_LABELS.map((label) => (
-          <div
-            key={label}
-            className="py-1 text-center text-xs font-medium tracking-wide text-denim/40 dark:text-offwhite/30"
-          >
-            {label}
-          </div>
-        ))}
-      </div>
-
-      {/* 日付グリッド */}
-      <div className="grid grid-cols-7 gap-px rounded-sm overflow-hidden bg-denim/5 dark:bg-offwhite/5">
-        {calendarDays.map((day, index) => {
-          if (day === null) {
-            return (
-              <div
-                key={`empty-${index}`}
-                className="bg-offwhite dark:bg-canvas-subtle aspect-square"
-              />
-            );
-          }
-
-          const dateKey = `${state.year}-${String(state.month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-          const ootd = ootdByDate.get(dateKey);
-          const isToday =
-            day === today.getDate() &&
-            state.month === today.getMonth() &&
-            state.year === today.getFullYear();
-
+      {/* 2段目: 今週ストリップ */}
+      <div
+        aria-label="今週"
+        className="grid grid-cols-7 gap-1 rounded-sm border border-denim/10 dark:border-offwhite/10 bg-offwhite-subtle dark:bg-canvas-subtle px-2 py-3"
+      >
+        {weekDays.map((d, i) => {
+          const isToday = isSameDate(d, today);
           return (
             <div
-              key={`day-${day}`}
-              className="relative bg-offwhite dark:bg-canvas-subtle aspect-square"
+              key={d.toISOString()}
+              className="flex flex-col items-center gap-1"
+              aria-current={isToday ? "date" : undefined}
             >
-              {ootd ? (
-                <button
-                  type="button"
-                  onClick={() => onSelect(ootd.id)}
-                  aria-label={`${state.year}年${state.month + 1}月${day}日のコーデを見る`}
-                  className="relative w-full h-full overflow-hidden group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-denim"
-                >
-                  <Image
-                    src={ootd.imageUrl}
-                    alt={ootd.oneLiner}
-                    fill
-                    sizes="(max-width: 768px) 14vw, 80px"
-                    className="object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                  />
-                  <span
-                    className={[
-                      "absolute top-0.5 left-0.5 text-xs font-bold leading-none z-10",
-                      "text-offwhite drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]",
-                      isToday ? "underline underline-offset-1" : "",
-                    ].join(" ")}
-                  >
-                    {day}
-                  </span>
-                </button>
-              ) : (
-                <div className="flex flex-col items-center justify-start pt-1 h-full px-0.5">
-                  <span
-                    className={[
-                      "text-xs font-medium leading-none",
-                      isToday
-                        ? "text-denim dark:text-denim-light font-bold underline underline-offset-1"
-                        : "text-denim/25 dark:text-offwhite/20",
-                    ].join(" ")}
-                  >
-                    {day}
-                  </span>
-                </div>
-              )}
+              <span
+                className={[
+                  "text-base font-bold leading-none tabular-nums",
+                  isToday
+                    ? "text-denim dark:text-offwhite"
+                    : "text-denim/50 dark:text-offwhite/40",
+                ].join(" ")}
+              >
+                {d.getDate()}
+              </span>
+              <span
+                className={[
+                  "text-[10px] font-medium tracking-wider uppercase leading-none",
+                  isToday
+                    ? "text-denim dark:text-offwhite"
+                    : "text-denim/30 dark:text-offwhite/20",
+                ].join(" ")}
+              >
+                {WEEKDAY_LABELS_SHORT[i]}
+              </span>
+              <span
+                aria-hidden="true"
+                className={[
+                  "h-1.5 leading-none text-[10px]",
+                  isToday
+                    ? "text-denim dark:text-offwhite"
+                    : "text-transparent",
+                ].join(" ")}
+              >
+                ▲
+              </span>
             </div>
           );
         })}
       </div>
+
+      {/* 3段目: 月カレンダー */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={handlePrevMonth}
+            aria-label="前の月"
+            className="rounded-sm p-1.5 text-denim/50 hover:text-denim dark:text-offwhite/40 dark:hover:text-offwhite transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
+          >
+            <ChevronLeftIcon width={16} height={16} />
+          </button>
+
+          <h3 className="font-display text-xl tracking-widest text-denim-dark dark:text-offwhite">
+            {MONTH_NAMES[state.month]} {state.year}
+          </h3>
+
+          <button
+            type="button"
+            onClick={handleNextMonth}
+            aria-label="次の月"
+            className="rounded-sm p-1.5 text-denim/50 hover:text-denim dark:text-offwhite/40 dark:hover:text-offwhite transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
+          >
+            <ChevronRightIcon width={16} height={16} />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-7 gap-px">
+          {WEEKDAY_LABELS.map((label) => (
+            <div
+              key={label}
+              className="py-1 text-center text-xs font-medium tracking-wide text-denim/40 dark:text-offwhite/30"
+            >
+              {label}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7 gap-px rounded-sm overflow-hidden bg-denim/5 dark:bg-offwhite/5">
+          {calendarDays.map((day, index) => {
+            if (day === null) {
+              return (
+                <div
+                  key={`empty-${index}`}
+                  className="bg-offwhite dark:bg-canvas-subtle aspect-square"
+                />
+              );
+            }
+
+            const dateKey = `${state.year}-${String(state.month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+            const ootd = ootdByDate.get(dateKey);
+            const isToday =
+              day === today.getDate() &&
+              state.month === today.getMonth() &&
+              state.year === today.getFullYear();
+
+            return (
+              <div
+                key={`day-${day}`}
+                className="relative bg-offwhite dark:bg-canvas-subtle aspect-square"
+              >
+                {ootd ? (
+                  <button
+                    type="button"
+                    onClick={() => onSelect(ootd.id)}
+                    aria-label={`${state.year}年${state.month + 1}月${day}日のコーデを見る`}
+                    className="relative w-full h-full overflow-hidden group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-denim"
+                  >
+                    <Image
+                      src={ootd.imageUrl}
+                      alt={ootd.oneLiner}
+                      fill
+                      sizes="(max-width: 768px) 14vw, 80px"
+                      className="object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                    />
+                    <span
+                      className={[
+                        "absolute top-0.5 left-0.5 text-xs font-bold leading-none z-10",
+                        "text-offwhite drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]",
+                        isToday ? "underline underline-offset-1" : "",
+                      ].join(" ")}
+                    >
+                      {day}
+                    </span>
+                  </button>
+                ) : (
+                  <div className="flex flex-col items-center justify-start pt-1 h-full px-0.5">
+                    <span
+                      className={[
+                        "text-xs font-medium leading-none",
+                        isToday
+                          ? "text-denim dark:text-denim-light font-bold underline underline-offset-1"
+                          : "text-denim/25 dark:text-offwhite/20",
+                      ].join(" ")}
+                    >
+                      {day}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
 }
