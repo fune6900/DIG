@@ -6,6 +6,19 @@
 
 ## リリースノート
 
+### v0.8.0 — 2026-04-26
+
+**SP版OOTD詳細ポップアップ + 戻るソフトナビ + 6軸評価レーダーUI**
+
+- 新規 `OotdEvaluationRadar`: Recharts ヘキサゴナル レーダー（時計回りに カジュアル → 落ち着いたトーン → さりげない → フォーマル → カラフル → 存在感のある）を緑線 stroke で描画
+- `OotdDetail`: `radarScores` がある OOTD は ITEMS の下に Evaluation セクションを表示。optional `onBack` prop で戻るソフトナビボタン
+- 新規 `OotdDetailModal` (SP only): 画面下からスライドアップ / 80dvh / 暗オーバーレイ + blur / ドラッグハンドル / ESC・戻る・オーバーレイで閉じる
+- 新規 `useIsMobile` hook（matchMedia <=767px）+ ユニットテスト 6 件
+- `OotdListClient`: SP では `getOotdByIdAction` でモーダル表示、PC は従来通り `/ootd/[id]` フルページ遷移。モーダルは conditional render で再オープン時にアニメーション再生
+- `OotdDetailPage` (フルページ): `onBack` を `router.back`（履歴がない場合は `/ootd`）にフォールバック
+
+---
+
 ### v0.7.0 — 2026-04-26
 
 **6軸評価レーダー基盤 + Notion 出典の AI プロンプト刷新**
