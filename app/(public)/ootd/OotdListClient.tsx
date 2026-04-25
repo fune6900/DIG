@@ -129,13 +129,15 @@ export function OotdListClient({ ootds }: OotdListClientProps) {
         <OotdCalendar ootds={ootds} onSelect={handleSelect} />
       )}
 
-      <OotdDetailModal
-        isOpen={modalOpen}
-        isLoading={modalLoading}
-        ootd={selectedOotd}
-        onClose={closeModal}
-        onDelete={handleDelete}
-      />
+      {modalOpen && (
+        <OotdDetailModal
+          isOpen={modalOpen}
+          isLoading={modalLoading}
+          ootd={selectedOotd}
+          onClose={closeModal}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   );
 }
