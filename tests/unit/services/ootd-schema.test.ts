@@ -4,6 +4,7 @@ import {
   StyleItemSchema,
   DetectedItemSchema,
   CreateOotdInputSchema,
+  EvaluationRadarSchema,
 } from "@/types/ootd";
 
 // ---------------------------------------------------------------------------
@@ -249,6 +250,76 @@ describe("OotdSchema", () => {
       ...validOotd,
       createdAt: "2026-03-15",
     });
+    expect(result.success).toBe(false);
+  });
+
+  it("radarScores が optional のため、欠落していてもパースできる", () => {
+    const result = OotdSchema.safeParse(validOotd);
+    expect(result.success).toBe(true);
+  });
+
+  it("radarScores が 6 軸揃っていればパースできる", () => {
+    const result = OotdSchema.safeParse({
+      ...validOotd,
+      radarScores: {
+        casual: 80,
+        subdued: 50,
+        presence: 70,
+        subtle: 30,
+        formal: 20,
+        colorful: 60,
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("radarScores の軸が欠けているとバリデーションエラーになる", () => {
+    const result = OotdSchema.safeParse({
+      ...validOotd,
+      radarScores: { casual: 80, subdued: 50 },
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// EvaluationRadarSchema
+// ---------------------------------------------------------------------------
+describe("EvaluationRadarSchema", () => {
+  const validRadar = {
+    casual: 0,
+    subdued: 50,
+    presence: 100,
+    subtle: 25,
+    formal: 75,
+    colorful: 60,
+  };
+
+  it("6 軸が 0〜100 の範囲でパースできる", () => {
+    const result = EvaluationRadarSchema.safeParse(validRadar);
+    expect(result.success).toBe(true);
+  });
+
+  it("いずれかの軸が 100 を超えるとバリデーションエラーになる", () => {
+    const result = EvaluationRadarSchema.safeParse({
+      ...validRadar,
+      formal: 101,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("いずれかの軸が負の値でバリデーションエラーになる", () => {
+    const result = EvaluationRadarSchema.safeParse({
+      ...validRadar,
+      colorful: -1,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("軸が欠落するとバリデーションエラーになる", () => {
+    const { casual: _omit, ...partial } = validRadar;
+    void _omit;
+    const result = EvaluationRadarSchema.safeParse(partial);
     expect(result.success).toBe(false);
   });
 });

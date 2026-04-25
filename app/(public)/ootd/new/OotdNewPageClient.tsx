@@ -143,6 +143,9 @@ export function OotdNewPageClient() {
         styles: analysisResult.styles,
         description: analysisResult.description,
         detectedItems: analysisResult.detectedItems,
+        ...(analysisResult.radarScores
+          ? { radarScores: analysisResult.radarScores }
+          : {}),
         tags: data.tags,
       });
 

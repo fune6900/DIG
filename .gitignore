@@ -59,6 +59,8 @@ test-results/
 public/uploads/
 .playwright-mcp/
 
-# local screenshots (root-level only — keep public/**/*.png trackable)
+# local screenshots / spec attachments (root-level only — keep public/**/*.png trackable)
 /*.png
+/*.jpeg
+/*.jpg
 .claude/scheduled_tasks.lock
