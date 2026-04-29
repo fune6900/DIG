@@ -89,6 +89,11 @@ async function main() {
     console.error(`[FAIL] GET: ${res.status} ${res.statusText}`);
     process.exit(1);
   }
+  const contentType = res.headers.get("content-type") ?? "";
+  if (!contentType.toLowerCase().startsWith("image/png")) {
+    console.error(`[FAIL] content-type 不正: "${contentType}"（image/png 期待）`);
+    process.exit(1);
+  }
   const buf = Buffer.from(await res.arrayBuffer());
   if (buf.length !== PNG_1x1.length) {
     console.error(

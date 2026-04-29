@@ -27,6 +27,20 @@ function makeRequest(body: unknown): Request {
 }
 
 describe("POST /api/upload-url", () => {
+  it("不正な JSON ボディなら 400 VALIDATION_ERROR を返し、createSignedUploadUrl を呼ばない", async () => {
+    const req = new Request("http://localhost/api/upload-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{",
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+
+    const json = (await res.json()) as { error?: { code?: string } };
+    expect(json.error?.code).toBe("VALIDATION_ERROR");
+    expect(createSignedUploadUrlMock).not.toHaveBeenCalled();
+  });
+
   it("有効な入力で 200 と署名URLを返す", async () => {
     createSignedUploadUrlMock.mockResolvedValue({
       signedUrl: "https://x/sign?token=t",

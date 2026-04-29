@@ -36,7 +36,9 @@ describe("POST /api/upload — HEIC 経路", () => {
   it("HEIC を受けたら convertHeicToJpeg で変換した Buffer を image/jpeg として保存する", async () => {
     const converted = Buffer.from("jpeg-bytes");
     convertHeicToJpegMock.mockResolvedValue(converted);
-    uploadImageMock.mockResolvedValue({ url: "https://x/public/converted.jpg" });
+    uploadImageMock.mockResolvedValue({
+      url: "https://x/public/converted.jpg",
+    });
 
     const heic = new File([new Uint8Array([0, 1, 2, 3])], "photo.heic", {
       type: "image/heic",
@@ -80,6 +82,36 @@ describe("POST /api/upload — HEIC 経路", () => {
       "image/jpeg",
       "a.jpg",
     );
+  });
+
+  it("10MB を超えるファイルは 413 FILE_TOO_LARGE を返し、uploadImage を呼ばない", async () => {
+    // 11MB の Uint8Array を File に詰める。File.size はバイト長で判定される。
+    const oversize = new Uint8Array(11 * 1024 * 1024);
+    const big = new File([oversize], "huge.jpg", { type: "image/jpeg" });
+
+    const res = await POST(makeFormDataRequest(big));
+
+    expect(res.status).toBe(413);
+    const json = (await res.json()) as {
+      data: unknown;
+      error?: { code?: string };
+    };
+    expect(json.data).toBeNull();
+    expect(json.error?.code).toBe("FILE_TOO_LARGE");
+    expect(uploadImageMock).not.toHaveBeenCalled();
+    expect(convertHeicToJpegMock).not.toHaveBeenCalled();
+  });
+
+  it("image/svg+xml のような未許可 MIME は 400 を返し、uploadImage を呼ばない", async () => {
+    const svg = new File([new Uint8Array([0])], "evil.svg", {
+      type: "image/svg+xml",
+    });
+    const res = await POST(makeFormDataRequest(svg));
+
+    expect(res.status).toBe(400);
+    const json = (await res.json()) as { error?: { code?: string } };
+    expect(json.error?.code).toBe("INVALID_FILE_TYPE");
+    expect(uploadImageMock).not.toHaveBeenCalled();
   });
 
   it("HEIC 変換失敗時は 500 を返し、内部エラーメッセージを露出しない", async () => {

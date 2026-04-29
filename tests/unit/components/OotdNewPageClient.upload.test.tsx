@@ -25,7 +25,10 @@ function getFileInput(): HTMLInputElement {
   return input as HTMLInputElement;
 }
 
-function fakeFetchResponse(body: unknown, init?: { status?: number }): Response {
+function fakeFetchResponse(
+  body: unknown,
+  init?: { status?: number },
+): Response {
   return new Response(JSON.stringify(body), {
     status: init?.status ?? 200,
     headers: { "Content-Type": "application/json" },
@@ -40,27 +43,35 @@ describe("OotdNewPageClient — アップロード経路分岐", () => {
   it("JPEG 選択時は /api/upload-url → 署名URLへ PUT → publicUrl を保持する", async () => {
     const fetchMock = vi
       .fn()
-      .mockImplementationOnce(async (input: RequestInfo) => {
-        const url =
-          typeof input === "string"
-            ? input
-            : (input as Request).url;
-        expect(url).toMatch(/\/api\/upload-url$/);
-        return fakeFetchResponse({
-          signedUrl: "https://x.supabase.co/sign?token=abc",
-          path: "abc.jpg",
-          publicUrl: "https://x.supabase.co/public/abc.jpg",
-        });
-      })
-      .mockImplementationOnce(async (input: RequestInfo, init?: RequestInit) => {
-        const url =
-          typeof input === "string"
-            ? input
-            : (input as Request).url;
-        expect(url).toContain("token=");
-        expect(init?.method).toBe("PUT");
-        return new Response(null, { status: 200 });
-      });
+      .mockImplementationOnce(
+        async (input: RequestInfo, init?: RequestInit) => {
+          const url =
+            typeof input === "string" ? input : (input as Request).url;
+          expect(url).toMatch(/\/api\/upload-url$/);
+          // クライアント→API の契約検証: POST + {mimeType, originalName}
+          expect(init?.method).toBe("POST");
+          const parsed = JSON.parse(String(init?.body ?? "{}")) as {
+            mimeType?: string;
+            originalName?: string;
+          };
+          expect(parsed.mimeType).toBe("image/jpeg");
+          expect(parsed.originalName).toBe("test.jpg");
+          return fakeFetchResponse({
+            signedUrl: "https://x.supabase.co/sign?token=abc",
+            path: "abc.jpg",
+            publicUrl: "https://x.supabase.co/public/abc.jpg",
+          });
+        },
+      )
+      .mockImplementationOnce(
+        async (input: RequestInfo, init?: RequestInit) => {
+          const url =
+            typeof input === "string" ? input : (input as Request).url;
+          expect(url).toContain("token=");
+          expect(init?.method).toBe("PUT");
+          return new Response(null, { status: 200 });
+        },
+      );
     vi.stubGlobal("fetch", fetchMock);
 
     render(<OotdNewPageClient />);
@@ -82,8 +93,7 @@ describe("OotdNewPageClient — アップロード経路分岐", () => {
 
   it("HEIC 選択時は /api/upload に FormData を送る既存経路を使う", async () => {
     const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo) => {
-      const url =
-        typeof input === "string" ? input : (input as Request).url;
+      const url = typeof input === "string" ? input : (input as Request).url;
       expect(url).toMatch(/\/api\/upload$/);
       return fakeFetchResponse({ url: "https://x.supabase.co/public/p.jpg" });
     });

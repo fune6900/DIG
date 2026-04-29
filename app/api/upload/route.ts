@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { uploadImage, convertHeicToJpeg } from "@/lib/storage";
-import { HEIC_MIME_TYPES } from "@/types/upload";
+import { DIRECT_UPLOAD_MIME_TYPES, HEIC_MIME_TYPES } from "@/types/upload";
 
 const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 const HEIC_MIME_SET = new Set<string>(HEIC_MIME_TYPES);
+// image/svg+xml 等のアクティブコンテンツを排除するため、サポート MIME を allowlist で固定する。
+const ALLOWED_IMAGE_MIME_TYPES = new Set<string>([
+  ...DIRECT_UPLOAD_MIME_TYPES,
+  ...HEIC_MIME_TYPES,
+]);
 
 function isHeic(mimeType: string): boolean {
   return HEIC_MIME_SET.has(mimeType.toLowerCase());
@@ -28,7 +33,8 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!file.type.startsWith("image/")) {
+  const mimeType = file.type.toLowerCase();
+  if (!ALLOWED_IMAGE_MIME_TYPES.has(mimeType)) {
     return NextResponse.json(
       {
         data: null,
@@ -54,17 +60,17 @@ export async function POST(request: Request) {
   try {
     const bytes = await file.arrayBuffer();
     let buffer: Buffer = Buffer.from(bytes);
-    let mimeType: string = file.type;
+    let storeMime: string = mimeType;
     let name: string = file.name;
 
-    if (isHeic(file.type)) {
+    if (isHeic(mimeType)) {
       // ブラウザ表示互換のため HEIC/HEIF はサーバーサイドで JPEG 化してから保存。
       buffer = await convertHeicToJpeg(buffer);
-      mimeType = "image/jpeg";
+      storeMime = "image/jpeg";
       name = replaceExtensionToJpg(file.name);
     }
 
-    const { url } = await uploadImage(buffer, mimeType, name);
+    const { url } = await uploadImage(buffer, storeMime, name);
     return NextResponse.json({ url }, { status: 200 });
   } catch (error) {
     console.error("[upload]", error);
