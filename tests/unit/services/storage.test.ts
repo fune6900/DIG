@@ -1,17 +1,27 @@
-import { writeFile, mkdir, unlink } from "fs/promises";
-import { join } from "path";
-import { tmpdir } from "os";
-
 // ---------------------------------------------------------------------------
 // lib/storage の振る舞いを検証する。
 // - driver=local（既定）: public/uploads/ にファイルを書き出して /uploads/<filename> を返す
 // - driver=supabase: Supabase Storage クライアントの upload を呼んで public URL を返す
+//
+// 注: fs/promises は外部 I/O のためモック許可（testing.md の例外条項に倣う）。
+// 実 FS への書き込みは E2E ではなく実機検証で担保する。
 // ---------------------------------------------------------------------------
+
+vi.mock("fs/promises", () => {
+  const writeFile = vi.fn().mockResolvedValue(undefined);
+  const mkdir = vi.fn().mockResolvedValue(undefined);
+  return {
+    default: { writeFile, mkdir },
+    writeFile,
+    mkdir,
+  };
+});
 
 vi.mock("@supabase/supabase-js", () => ({
   createClient: vi.fn(),
 }));
 
+import { writeFile, mkdir } from "fs/promises";
 import { createClient } from "@supabase/supabase-js";
 
 const ORIGINAL_ENV = { ...process.env };
@@ -34,6 +44,8 @@ describe("uploadImage (local driver)", () => {
     const result = await uploadImage(buffer, "image/jpeg", "test.jpg");
 
     expect(result.url).toMatch(/^\/uploads\/[^/]+\.jpg$/);
+    expect(mkdir).toHaveBeenCalled();
+    expect(writeFile).toHaveBeenCalled();
   });
 
   it("拡張子を mimeType から推測する", async () => {
@@ -45,6 +57,22 @@ describe("uploadImage (local driver)", () => {
     const result = await uploadImage(buffer, "image/png", "noext");
 
     expect(result.url).toMatch(/\.png$/);
+  });
+
+  it("不正な拡張子（パス区切りや特殊文字混入）は .jpg にフォールバックする", async () => {
+    process.env.STORAGE_DRIVER = "local";
+
+    const { uploadImage } = await import("@/lib/storage");
+    const buffer = Buffer.from("dummy");
+
+    // mimeType がマップ外で、ファイル名末尾が安全でないケース
+    const result = await uploadImage(
+      buffer,
+      "application/octet-stream",
+      "evil.../bin/sh",
+    );
+
+    expect(result.url).toMatch(/\.jpg$/);
   });
 });
 
@@ -119,25 +147,25 @@ describe("uploadImage (supabase driver)", () => {
   });
 });
 
-// 後始末: ローカルテスト用に作られたファイルが残っても次回テストには影響しないが、
-// 大量に蓄積しないように tests 内で参照しないことを確認。
-describe("local driver の副作用", () => {
-  it("public/uploads/ 配下に書き出す", async () => {
-    process.env.STORAGE_DRIVER = "local";
+describe("uploadImage (driver 解決)", () => {
+  it("STORAGE_DRIVER に 'local'/'supabase' 以外を指定すると例外を投げる", async () => {
+    process.env.STORAGE_DRIVER = "s3";
 
     const { uploadImage } = await import("@/lib/storage");
-    const buffer = Buffer.from("hello");
+    const buffer = Buffer.from("dummy");
+
+    await expect(uploadImage(buffer, "image/jpeg", "x.jpg")).rejects.toThrow(
+      /Invalid STORAGE_DRIVER/,
+    );
+  });
+
+  it("STORAGE_DRIVER 未設定のときはローカルに落ちる", async () => {
+    delete process.env.STORAGE_DRIVER;
+
+    const { uploadImage } = await import("@/lib/storage");
+    const buffer = Buffer.from("dummy");
 
     const result = await uploadImage(buffer, "image/jpeg", "x.jpg");
     expect(result.url.startsWith("/uploads/")).toBe(true);
   });
 });
-
-// helper: テストの後始末で生成された /public/uploads/*.jpg が増えないように
-// uploadImage を呼ぶ際は random filename になる前提だが、テストで作ったファイルを
-// 全削除すると並列実行時に他テストを壊す可能性があるため放置（CI ではクリーンビルド）。
-void writeFile;
-void mkdir;
-void unlink;
-void join;
-void tmpdir;

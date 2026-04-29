@@ -1,11 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import { BottomNav } from "@/components/ui/BottomNav";
 
+const usePathnameMock = vi.fn();
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/ootd",
+  usePathname: () => usePathnameMock(),
 }));
 
 describe("BottomNav", () => {
+  beforeEach(() => {
+    usePathnameMock.mockReset();
+    usePathnameMock.mockReturnValue("/ootd");
+  });
+
   it("着こなし検索リンクは /search を指し、search アイコンを表示する", () => {
     render(<BottomNav />);
     const link = screen.getByRole("link", { name: /着こなし検索/ });
@@ -30,5 +36,17 @@ describe("BottomNav", () => {
     render(<BottomNav />);
     const link = screen.getByRole("link", { name: /OOTDを追加/ });
     expect(link).toHaveAttribute("href", "/ootd/new");
+  });
+
+  it("/ootd/new ではナビが描画されない（早期リターン）", () => {
+    usePathnameMock.mockReturnValue("/ootd/new");
+    const { container } = render(<BottomNav />);
+    expect(container.querySelector("nav")).toBeNull();
+  });
+
+  it("/ootd/new/foo（サブパス）でもナビは描画されない", () => {
+    usePathnameMock.mockReturnValue("/ootd/new/foo");
+    const { container } = render(<BottomNav />);
+    expect(container.querySelector("nav")).toBeNull();
   });
 });

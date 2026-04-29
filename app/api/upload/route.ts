@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { uploadImage } from "@/lib/storage";
 
+const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+
 export async function POST(request: Request) {
   const formData = await request.formData();
   const file = formData.get("image");
@@ -25,6 +27,16 @@ export async function POST(request: Request) {
         },
       },
       { status: 400 },
+    );
+  }
+
+  if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+    return NextResponse.json(
+      {
+        data: null,
+        error: { message: "File is too large", code: "FILE_TOO_LARGE" },
+      },
+      { status: 413 },
     );
   }
 

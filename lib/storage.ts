@@ -17,19 +17,25 @@ const MIME_TO_EXT: Record<string, string> = {
   "image/webp": ".webp",
 };
 
+const SAFE_EXTENSION_PATTERN = /^\.[a-z0-9]{1,10}$/;
+
 function resolveExtension(mimeType: string, fallbackName: string): string {
   const fromMime = MIME_TO_EXT[mimeType.toLowerCase()];
   if (fromMime) return fromMime;
   const dotIndex = fallbackName.lastIndexOf(".");
   if (dotIndex >= 0 && dotIndex < fallbackName.length - 1) {
-    return fallbackName.slice(dotIndex);
+    const candidate = fallbackName.slice(dotIndex).toLowerCase();
+    if (SAFE_EXTENSION_PATTERN.test(candidate)) return candidate;
   }
   return ".jpg";
 }
 
 function resolveDriver(): Driver {
-  const raw = process.env.STORAGE_DRIVER?.toLowerCase();
-  return raw === "supabase" ? "supabase" : "local";
+  const raw = process.env.STORAGE_DRIVER?.toLowerCase() ?? "local";
+  if (raw === "local" || raw === "supabase") return raw;
+  throw new Error(
+    `Invalid STORAGE_DRIVER="${raw}". Allowed values are "local" or "supabase".`,
+  );
 }
 
 async function uploadLocal(
