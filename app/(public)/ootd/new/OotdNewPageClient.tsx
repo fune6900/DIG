@@ -15,8 +15,10 @@ type Step = "upload" | "analysis" | "register";
 
 export function OotdNewPageClient() {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
+  const [isChooserOpen, setIsChooserOpen] = useState(false);
 
   const [step, setStep] = useState<Step>("upload");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -223,7 +225,13 @@ export function OotdNewPageClient() {
         <div className="space-y-6">
           <div
             className="flex cursor-pointer flex-col items-center justify-center gap-4 rounded-sm border-2 border-dashed border-denim/20 dark:border-offwhite/20 bg-offwhite-subtle dark:bg-canvas-subtle px-6 py-16 transition-colors hover:border-denim/40 dark:hover:border-offwhite/40"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => {
+              if (isMobile) {
+                setIsChooserOpen(true);
+              } else {
+                galleryInputRef.current?.click();
+              }
+            }}
             role="button"
             aria-label="画像を選択"
           >
@@ -253,14 +261,28 @@ export function OotdNewPageClient() {
             )}
           </div>
 
+          {/*
+           * SP では「カメラ」「写真ライブラリ」の 2 択をシートで選ばせ、
+           * それぞれ別の input を click() でトリガーする（capture の有無を切り替えるため）。
+           * PC ではアップロード領域クリックで galleryInput を直接トリガーする。
+           */}
           <input
-            ref={fileInputRef}
+            ref={cameraInputRef}
             type="file"
             accept="image/*"
-            {...(isMobile ? { capture: "environment" as const } : {})}
+            capture="environment"
             className="sr-only"
             onChange={handleFileChange}
-            aria-label="コーデ画像"
+            aria-label="コーデ画像（カメラ）"
+            tabIndex={-1}
+          />
+          <input
+            ref={galleryInputRef}
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={handleFileChange}
+            aria-label="コーデ画像（写真ライブラリ）"
             tabIndex={-1}
           />
 
@@ -292,6 +314,50 @@ export function OotdNewPageClient() {
           onSubmit={handleRegisterSubmit}
           isSubmitting={isSubmitting}
         />
+      )}
+
+      {isChooserOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="画像入力方法を選択"
+          className="fixed inset-0 z-40 flex items-end justify-center bg-canvas/40 backdrop-blur-sm dark:bg-canvas/60"
+          onClick={() => setIsChooserOpen(false)}
+        >
+          <div
+            className="w-full max-w-md space-y-2 rounded-t-2xl bg-offwhite px-4 pb-8 pt-4 shadow-2xl dark:bg-canvas-subtle"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-denim/20 dark:bg-offwhite/20" />
+            <button
+              type="button"
+              onClick={() => {
+                setIsChooserOpen(false);
+                cameraInputRef.current?.click();
+              }}
+              className="w-full rounded-sm border border-denim/15 bg-offwhite px-4 py-3 text-sm font-medium tracking-wider text-denim hover:border-denim/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2 dark:border-offwhite/15 dark:bg-canvas-subtle dark:text-offwhite"
+            >
+              カメラを起動
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsChooserOpen(false);
+                galleryInputRef.current?.click();
+              }}
+              className="w-full rounded-sm border border-denim/15 bg-offwhite px-4 py-3 text-sm font-medium tracking-wider text-denim hover:border-denim/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2 dark:border-offwhite/15 dark:bg-canvas-subtle dark:text-offwhite"
+            >
+              写真ライブラリから選ぶ
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsChooserOpen(false)}
+              className="w-full rounded-sm border border-transparent px-4 py-3 text-sm tracking-wider text-denim/60 hover:text-denim transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2 dark:text-offwhite/60 dark:hover:text-offwhite"
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
       )}
 
       <OotdAnalysisModal

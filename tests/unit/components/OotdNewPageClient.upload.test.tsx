@@ -21,7 +21,12 @@ vi.mock("@/hooks/useIsMobile", () => ({
 import { OotdNewPageClient } from "@/app/(public)/ootd/new/OotdNewPageClient";
 
 function getFileInput(): HTMLInputElement {
-  const input = screen.getByLabelText("コーデ画像", { selector: "input" });
+  // SP の 2 択シート導入後、ファイル選択用 input は「カメラ」と「写真ライブラリ」の
+  // 2 つに分かれた。アップロード経路の検証はどちらの input でも同じ handleFileChange を
+  // 経由するため、ライブラリ用 input をターゲットに onChange を発火する。
+  const input = screen.getByLabelText("コーデ画像（写真ライブラリ）", {
+    selector: "input",
+  });
   return input as HTMLInputElement;
 }
 
