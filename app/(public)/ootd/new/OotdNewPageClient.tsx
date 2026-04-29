@@ -8,6 +8,7 @@ import { OotdRegisterForm } from "@/components/features/ootd/OotdRegisterForm";
 import { createOotdAction } from "@/app/actions/ootd";
 import { ImageIcon, SparkleIcon } from "@/components/ui/icons";
 import { Spinner } from "@/components/ui/Spinner";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import type { OotdAnalysisResult } from "@/types/ootd";
 
 type Step = "upload" | "analysis" | "register";
@@ -15,6 +16,7 @@ type Step = "upload" | "analysis" | "register";
 export function OotdNewPageClient() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   const [step, setStep] = useState<Step>("upload");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -212,6 +214,7 @@ export function OotdNewPageClient() {
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            {...(isMobile ? { capture: "environment" as const } : {})}
             className="sr-only"
             onChange={handleFileChange}
             aria-label="コーデ画像"

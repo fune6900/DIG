@@ -1,0 +1,34 @@
+import { render, screen } from "@testing-library/react";
+import { BottomNav } from "@/components/ui/BottomNav";
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/ootd",
+}));
+
+describe("BottomNav", () => {
+  it("着こなし検索リンクは /search を指し、search アイコンを表示する", () => {
+    render(<BottomNav />);
+    const link = screen.getByRole("link", { name: /着こなし検索/ });
+    expect(link).toHaveAttribute("href", "/search");
+    // SearchIcon は <circle> + <line> を持つ虫眼鏡アイコン
+    const svg = link.querySelector("svg");
+    expect(svg).not.toBeNull();
+    expect(svg?.querySelector("circle")).not.toBeNull();
+  });
+
+  it("OOTD一覧リンクは /ootd を指し、calendar アイコンを表示する", () => {
+    render(<BottomNav />);
+    const link = screen.getByRole("link", { name: /OOTD一覧/ });
+    expect(link).toHaveAttribute("href", "/ootd");
+    // CalendarIcon は <rect> を持つ
+    const svg = link.querySelector("svg");
+    expect(svg).not.toBeNull();
+    expect(svg?.querySelector("rect")).not.toBeNull();
+  });
+
+  it("OOTD追加（中央）リンクは /ootd/new を指す", () => {
+    render(<BottomNav />);
+    const link = screen.getByRole("link", { name: /OOTDを追加/ });
+    expect(link).toHaveAttribute("href", "/ootd/new");
+  });
+});
