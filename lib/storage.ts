@@ -9,13 +9,27 @@ interface UploadResult {
   url: string;
 }
 
+interface SignedUploadUrlResult {
+  signedUrl: string;
+  path: string;
+  publicUrl: string;
+}
+
 const MIME_TO_EXT: Record<string, string> = {
   "image/jpeg": ".jpg",
   "image/jpg": ".jpg",
   "image/png": ".png",
   "image/gif": ".gif",
   "image/webp": ".webp",
+  "image/heic": ".heic",
+  "image/heif": ".heif",
 };
+
+/**
+ * 署名URLが有効でいてほしい上限秒数（ドキュメント目的）。
+ * Supabase 側の実装上は固定（約2時間）で、この値はクライアントへの目安。
+ */
+export const SIGNED_URL_EXPIRES_IN_SEC = 60;
 
 const SAFE_EXTENSION_PATTERN = /^\.[a-z0-9]{1,10}$/;
 
@@ -109,4 +123,73 @@ export async function uploadImage(
     return uploadSupabase(buffer, mimeType, originalName);
   }
   return uploadLocal(buffer, mimeType, originalName);
+}
+
+/**
+ * クライアント直接アップロード用の署名URLを発行する。
+ * 呼び出しは service_role 権限で行うため、RLS を緩める必要はない。
+ * - signedUrl: ブラウザから PUT する短期有効URL
+ * - path: バケット内オブジェクトパス
+ * - publicUrl: アップロード後にアプリで参照する公開URL
+ */
+export async function createSignedUploadUrl(
+  mimeType: string,
+  originalName: string,
+): Promise<SignedUploadUrlResult> {
+  const driver = resolveDriver();
+  if (driver !== "supabase") {
+    throw new Error(
+      "createSignedUploadUrl は STORAGE_DRIVER=supabase でのみ利用可能",
+    );
+  }
+
+  const bucket = process.env.SUPABASE_STORAGE_BUCKET;
+  if (!bucket) {
+    throw new Error(
+      "createSignedUploadUrl requires SUPABASE_STORAGE_BUCKET",
+    );
+  }
+
+  const client = getSupabaseClient();
+  const ext = resolveExtension(mimeType, originalName);
+  const path = `${randomUUID()}${ext}`;
+
+  // 注: Supabase の createSignedUploadUrl はサーバー側で固定の有効期限（約2時間）を
+  // 持つ。expiresIn の引数は受け付けない（v2 系仕様）。アプリ側の SLA としては
+  // SIGNED_URL_EXPIRES_IN_SEC を上限の目安としてドキュメント化しておくに留める。
+  const { data, error } = await client.storage
+    .from(bucket)
+    .createSignedUploadUrl(path);
+  if (error || !data) {
+    throw new Error(
+      `Failed to create signed upload URL: ${error?.message ?? "unknown"}`,
+    );
+  }
+
+  // 公開URLは我々が指定した path 基準で組み立てる。Supabase 側の echo を信用しすぎない。
+  const { data: publicData } = client.storage.from(bucket).getPublicUrl(path);
+  if (!publicData?.publicUrl) {
+    throw new Error("Public URL is missing after signed URL creation");
+  }
+
+  return {
+    signedUrl: data.signedUrl,
+    path,
+    publicUrl: publicData.publicUrl,
+  };
+}
+
+/**
+ * HEIC/HEIF Buffer を JPEG Buffer に変換する。pure JS 実装の heic-convert を使う。
+ * Vercel ランタイムで動かすため native 依存（libheif）を避けている。
+ */
+export async function convertHeicToJpeg(buffer: Buffer): Promise<Buffer> {
+  // 動的 import で cold-start 時の読み込みコストを限定する。
+  const { default: heicConvert } = await import("heic-convert");
+  const out = await heicConvert({
+    buffer,
+    format: "JPEG",
+    quality: 0.85,
+  });
+  return Buffer.from(out);
 }

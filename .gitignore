@@ -9,10 +9,9 @@ out/
 build/
 dist/
 
-# env
+# env (.env.example はテンプレートとしてコミットする)
 .env
 .env.local
-.env.example
 .env.development
 .env.development.local
 .env.test.local
