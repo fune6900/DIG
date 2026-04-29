@@ -8,6 +8,7 @@ import { OotdRegisterForm } from "@/components/features/ootd/OotdRegisterForm";
 import { createOotdAction } from "@/app/actions/ootd";
 import { ImageIcon, SparkleIcon } from "@/components/ui/icons";
 import { Spinner } from "@/components/ui/Spinner";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import type { OotdAnalysisResult } from "@/types/ootd";
 
 type Step = "upload" | "analysis" | "register";
@@ -15,6 +16,7 @@ type Step = "upload" | "analysis" | "register";
 export function OotdNewPageClient() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   const [step, setStep] = useState<Step>("upload");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -28,6 +30,62 @@ export function OotdNewPageClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // HEIC/HEIF は他ブラウザで表示できないため、サーバーサイドで JPEG 変換する経路に回す。
+  const HEIC_TYPES = new Set(["image/heic", "image/heif"]);
+
+  async function uploadDirect(file: File): Promise<string> {
+    // 1. /api/upload-url で署名URL取得
+    const issueRes = await fetch("/api/upload-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mimeType: file.type,
+        originalName: file.name,
+      }),
+    });
+    const issueJson = (await issueRes.json()) as {
+      signedUrl?: string;
+      publicUrl?: string;
+      error?: { message: string };
+    };
+    if (!issueRes.ok || !issueJson.signedUrl || !issueJson.publicUrl) {
+      throw new Error(
+        issueJson.error?.message ?? "アップロードURLの発行に失敗しました",
+      );
+    }
+
+    // 2. 署名URLへ直接 PUT
+    const putRes = await fetch(issueJson.signedUrl, {
+      method: "PUT",
+      headers: { "Content-Type": file.type },
+      body: file,
+    });
+    if (!putRes.ok) {
+      throw new Error("画像のアップロードに失敗しました");
+    }
+
+    return issueJson.publicUrl;
+  }
+
+  async function uploadViaServer(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+    const json = (await res.json()) as {
+      url?: string;
+      error?: { message: string };
+    };
+
+    if (!res.ok || !json.url) {
+      throw new Error(json.error?.message ?? "アップロードに失敗しました");
+    }
+    return json.url;
+  }
+
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -37,23 +95,10 @@ export function OotdNewPageClient() {
     setIsUploading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("image", file);
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-      const json = (await res.json()) as {
-        url?: string;
-        error?: { message: string };
-      };
-
-      if (!res.ok || !json.url) {
-        throw new Error(json.error?.message ?? "アップロードに失敗しました");
-      }
-
-      setUploadedUrl(json.url);
+      const url = HEIC_TYPES.has(file.type)
+        ? await uploadViaServer(file)
+        : await uploadDirect(file);
+      setUploadedUrl(url);
     } catch (err) {
       setErrorMessage(
         err instanceof Error ? err.message : "アップロードに失敗しました",
@@ -212,6 +257,7 @@ export function OotdNewPageClient() {
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            {...(isMobile ? { capture: "environment" as const } : {})}
             className="sr-only"
             onChange={handleFileChange}
             aria-label="コーデ画像"

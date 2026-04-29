@@ -6,6 +6,29 @@
 
 ## リリースノート
 
+### v0.9.0 — 2026-04-29
+
+**SP カメラ起動 + 本番画像ストレージ（Supabase Storage）+ HEIC 対応 + ボトムナビ刷新**
+
+- SP では `/ootd/new` の画像入力に `capture="environment"` を付与しカメラ直起動。PC は通常のファイル選択ダイアログ
+- 本番画像ストレージとして Supabase Storage を導入（`STORAGE_DRIVER=local|supabase` で切替）
+  - 新規 `lib/storage.ts` に driver 抽象を実装。ローカル開発は `public/uploads/` を維持
+  - 拡張子サニタイズ（`^\.[a-z0-9]{1,10}$` のみ許可、不正なら `.jpg`）
+  - `STORAGE_DRIVER` の不正値は例外で早期検知
+- 署名 URL 経由のクライアント直接アップロードを追加（`/api/upload-url`）
+  - JPEG/PNG/WebP/GIF はブラウザから Supabase に直接 PUT
+  - HEIC/HEIF は `/api/upload` 経由でサーバ側 JPEG 変換（`heic-convert`、Vercel 互換）
+- アップロードのセキュリティ強化
+  - MIME を allowlist 化（`image/svg+xml` 等のアクティブコンテンツを排除）
+  - ファイルサイズ 10MB 上限、超過で 413 早期リターン
+- ボトムナビのアイコンを内容に合致したものへ変更
+  - 着こなし検索: `ClockIcon` → `SearchIcon`（「検索」ラベル）
+  - OOTD一覧: `UserIcon` → `CalendarIcon`（「一覧」ラベル）
+- `.env.example` 整理（未使用 `SUPABASE_KEY` を削除、`SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_STORAGE_BUCKET` / `STORAGE_DRIVER` を追加）
+- 動作確認スクリプト `scripts/smoke-supabase-storage.mjs`（PUT/GET/DELETE と Content-Type 検証）
+
+---
+
 ### v0.8.0 — 2026-04-26
 
 **SP版OOTD詳細ポップアップ + 戻るソフトナビ + 6軸評価レーダーUI**

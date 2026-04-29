@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClockIcon, PlusIcon, UserIcon } from "@/components/ui/icons";
+import { CalendarIcon, PlusIcon, SearchIcon } from "@/components/ui/icons";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -25,9 +25,12 @@ export function BottomNav() {
           <Link
             href="/search"
             aria-label="着こなし検索"
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-offwhite/80 backdrop-blur-md text-denim-dark shadow-lg ring-1 ring-denim/10 transition-all hover:bg-offwhite hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2 dark:bg-canvas-subtle/80 dark:text-offwhite dark:ring-offwhite/10"
+            className="flex h-14 w-14 flex-col items-center justify-center rounded-full bg-offwhite/80 backdrop-blur-md text-denim-dark shadow-lg ring-1 ring-denim/10 transition-all hover:bg-offwhite hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2 dark:bg-canvas-subtle/80 dark:text-offwhite dark:ring-offwhite/10"
           >
-            <ClockIcon width={24} height={24} />
+            <SearchIcon width={20} height={20} />
+            <span className="text-[9px] font-medium tracking-wider mt-0.5">
+              検索
+            </span>
           </Link>
 
           <Link
@@ -43,9 +46,9 @@ export function BottomNav() {
             aria-label="自分のOOTD一覧"
             className="flex h-14 w-14 flex-col items-center justify-center rounded-full bg-offwhite/80 backdrop-blur-md text-denim-dark shadow-lg ring-1 ring-denim/10 transition-all hover:bg-offwhite hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2 dark:bg-canvas-subtle/80 dark:text-offwhite dark:ring-offwhite/10"
           >
-            <UserIcon width={20} height={20} />
+            <CalendarIcon width={20} height={20} />
             <span className="text-[9px] font-medium tracking-wider mt-0.5">
-              自分
+              一覧
             </span>
           </Link>
         </div>
