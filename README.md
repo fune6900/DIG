@@ -6,6 +6,19 @@
 
 ## リリースノート
 
+### v0.9.1 — 2026-05-04
+
+**🔴 hotfix: 本番 OOTD 登録の analyze/sticker 400 + SP アップローダ 2 択シート復元**
+
+- `/api/ootd/analyze` と `/api/ootd/sticker` が `imageUrl.startsWith("/uploads/")` のローカル前提のままで、本番（Supabase Storage publicUrl）で 400 を返していたリグレッションを修正
+- 新規 `lib/image-loader.ts` でローカル `/uploads/` と Supabase publicUrl の両分岐を共通化
+  - SSRF 対策: ホスト名は `SUPABASE_URL` のホストと完全一致のみ許可
+  - リモートは `fetch` で取得、Content-Type から MIME 推定（無ければ拡張子から）
+- `/api/ootd/sticker` の出力も `uploadImage`（driver 抽象）経由に変更。本番では Supabase Storage に書き出す
+- SP の `+` ボタン押下時のカメラ直起動仕様を撤回し、「カメラを起動 / 写真ライブラリから選ぶ / キャンセル」の 2 択シートに戻す（PC は従来通り単一のファイル選択ダイアログ）
+
+---
+
 ### v0.9.0 — 2026-04-29
 
 **SP カメラ起動 + 本番画像ストレージ（Supabase Storage）+ HEIC 対応 + ボトムナビ刷新**
