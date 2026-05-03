@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { readFile, mkdir } from "fs/promises";
-import { join, extname } from "path";
-import { randomUUID } from "crypto";
 import sharp from "sharp";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
+import { loadImageBuffer } from "@/lib/image-loader";
+import { uploadImage } from "@/lib/storage";
 
 const BodySchema = z.object({
   imageUrl: z.string().min(1),
@@ -23,17 +22,6 @@ Format: {"x": 0.1, "y": 0.05, "width": 0.8, "height": 0.9}
 Where x, y are the top-left corner (0=left/top, 1=right/bottom), width and height are fractions of the image.
 Return ONLY the JSON object, no markdown, no explanation.`;
 
-const MIME_MAP: Record<
-  string,
-  "image/jpeg" | "image/png" | "image/gif" | "image/webp"
-> = {
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".png": "image/png",
-  ".gif": "image/gif",
-  ".webp": "image/webp",
-};
-
 export async function POST(request: Request) {
   const body = (await request.json()) as unknown;
   const parsed = BodySchema.safeParse(body);
@@ -48,33 +36,20 @@ export async function POST(request: Request) {
     );
   }
 
-  const { imageUrl } = parsed.data;
-
-  if (!imageUrl.startsWith("/uploads/")) {
-    return NextResponse.json(
-      {
-        data: null,
-        error: { message: "Invalid image URL", code: "VALIDATION_ERROR" },
-      },
-      { status: 400 },
-    );
-  }
-
   try {
-    const filePath = join(process.cwd(), "public", imageUrl);
-    const buffer = await readFile(filePath);
+    const { buffer, mimeType } = await loadImageBuffer(parsed.data.imageUrl);
 
     const metadata = await sharp(buffer).metadata();
     const imgWidth = metadata.width ?? 512;
     const imgHeight = metadata.height ?? 512;
 
-    const ext = extname(imageUrl).toLowerCase();
-    const mimeType = MIME_MAP[ext] ?? "image/jpeg";
     const base64 = buffer.toString("base64");
 
     // Gemini でバウンディングボックス取得
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+    const model = genAI.getGenerativeModel({
+      model: "gemini-3-flash-preview",
+    });
 
     const result = await model.generateContent([
       { inlineData: { data: base64, mimeType } },
@@ -109,18 +84,17 @@ export async function POST(request: Request) {
     const width = Math.round(cropW * imgWidth);
     const height = Math.round(cropH * imgHeight);
 
-    const stickersDir = join(process.cwd(), "public", "uploads", "stickers");
-    await mkdir(stickersDir, { recursive: true });
-
-    const filename = `${randomUUID()}.webp`;
-    const outputPath = join(stickersDir, filename);
-
-    await sharp(buffer)
+    const cropped = await sharp(buffer)
       .extract({ left, top, width, height })
       .webp({ quality: 90 })
-      .toFile(outputPath);
+      .toBuffer();
 
-    const stickerUrl = `/uploads/stickers/${filename}`;
+    // 出力もストレージドライバ経由（本番は Supabase Storage）。
+    const { url: stickerUrl } = await uploadImage(
+      cropped,
+      "image/webp",
+      "sticker.webp",
+    );
     return NextResponse.json(
       { data: { stickerUrl }, error: null },
       { status: 200 },
