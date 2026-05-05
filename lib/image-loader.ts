@@ -1,5 +1,5 @@
 import { readFile } from "fs/promises";
-import { join, extname } from "path";
+import { extname, resolve, sep } from "path";
 
 type SupportedMime = "image/jpeg" | "image/png" | "image/gif" | "image/webp";
 
@@ -42,10 +42,16 @@ function resolveMimeFromContentType(
 }
 
 async function loadLocal(imageUrl: string): Promise<LoadedImage> {
-  // imageUrl は "/uploads/<filename>" 形式。public/ 配下から読む。
-  const filePath = join(process.cwd(), "public", imageUrl);
+  // imageUrl は "/uploads/<relative>" 形式。
+  // パストラバーサル防止: resolve 後のパスが必ず uploads ディレクトリ配下にあることを検証する。
+  const uploadsDir = resolve(process.cwd(), "public", "uploads");
+  const relativePath = imageUrl.slice("/uploads/".length);
+  const filePath = resolve(uploadsDir, relativePath);
+  if (filePath !== uploadsDir && !filePath.startsWith(`${uploadsDir}${sep}`)) {
+    throw new Error("Invalid image URL");
+  }
   const buffer = await readFile(filePath);
-  return { buffer, mimeType: resolveMimeFromExtension(imageUrl) };
+  return { buffer, mimeType: resolveMimeFromExtension(relativePath) };
 }
 
 async function loadRemote(url: URL): Promise<LoadedImage> {

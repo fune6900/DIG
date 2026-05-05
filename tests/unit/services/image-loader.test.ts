@@ -154,3 +154,32 @@ describe("loadImageBuffer (バリデーション)", () => {
     ).rejects.toThrow();
   });
 });
+
+describe("loadImageBuffer (パストラバーサル防止)", () => {
+  it("/uploads/../<外部ファイル> は拒否し、readFile を呼ばない", async () => {
+    const { loadImageBuffer } = await import("@/lib/image-loader");
+
+    await expect(
+      loadImageBuffer("/uploads/../../etc/passwd"),
+    ).rejects.toThrow();
+    expect(readFile).not.toHaveBeenCalled();
+  });
+
+  it("/uploads/../secret.env のような同階層脱出も拒否する", async () => {
+    const { loadImageBuffer } = await import("@/lib/image-loader");
+
+    await expect(loadImageBuffer("/uploads/../secret.env")).rejects.toThrow();
+    expect(readFile).not.toHaveBeenCalled();
+  });
+
+  it("/uploads/sub/file.jpg のようなサブディレクトリは引き続き許可する", async () => {
+    vi.mocked(readFile).mockResolvedValue(Buffer.from("ok"));
+
+    const { loadImageBuffer } = await import("@/lib/image-loader");
+    const result = await loadImageBuffer("/uploads/sub/file.jpg");
+
+    expect(readFile).toHaveBeenCalled();
+    expect(result.buffer.toString()).toBe("ok");
+    expect(result.mimeType).toBe("image/jpeg");
+  });
+});
