@@ -85,25 +85,35 @@ describe("OotdNewPageClient — SP 2 択シート", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("シートで「カメラを起動」をタップするとシートが閉じる", () => {
+  it("シートで「カメラを起動」をタップするとカメラ用 input.click() が呼ばれ、シートが閉じる", () => {
     useIsMobileMock.mockReturnValue(true);
     render(<OotdNewPageClient />);
+
+    const cameraClickSpy = vi.spyOn(getCameraInput(), "click");
+    const galleryClickSpy = vi.spyOn(getGalleryInput(), "click");
 
     fireEvent.click(screen.getByRole("button", { name: /画像を選択/ }));
     fireEvent.click(screen.getByRole("button", { name: /カメラを起動/ }));
 
+    expect(cameraClickSpy).toHaveBeenCalledTimes(1);
+    expect(galleryClickSpy).not.toHaveBeenCalled();
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("シートで「写真ライブラリから選ぶ」をタップするとシートが閉じる", () => {
+  it("シートで「写真ライブラリから選ぶ」をタップするとライブラリ用 input.click() が呼ばれ、シートが閉じる", () => {
     useIsMobileMock.mockReturnValue(true);
     render(<OotdNewPageClient />);
+
+    const cameraClickSpy = vi.spyOn(getCameraInput(), "click");
+    const galleryClickSpy = vi.spyOn(getGalleryInput(), "click");
 
     fireEvent.click(screen.getByRole("button", { name: /画像を選択/ }));
     fireEvent.click(
       screen.getByRole("button", { name: /写真ライブラリから選ぶ/ }),
     );
 
+    expect(galleryClickSpy).toHaveBeenCalledTimes(1);
+    expect(cameraClickSpy).not.toHaveBeenCalled();
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
