@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { OotdAnalysisModal } from "@/components/features/ootd/OotdAnalysisModal";
 import { OotdRegisterForm } from "@/components/features/ootd/OotdRegisterForm";
-import { createOotdAction } from "@/app/actions/ootd";
+import {
+  createOotdAction,
+  deleteUploadedImagesAction,
+} from "@/app/actions/ootd";
 import { ImageIcon, SparkleIcon } from "@/components/ui/icons";
 import { Spinner } from "@/components/ui/Spinner";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -92,6 +95,12 @@ export function OotdNewPageClient() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // 同一セッションで画像を選び直した場合、旧 uploadedUrl の Storage 実体を残さない。
+    if (uploadedUrl) {
+      void deleteUploadedImagesAction({ urls: [uploadedUrl] });
+      setUploadedUrl(null);
+    }
+
     setErrorMessage(null);
     setPreviewUrl(URL.createObjectURL(file));
     setIsUploading(true);
@@ -136,6 +145,12 @@ export function OotdNewPageClient() {
 
       setAnalysisResult(json.data);
     } catch (err) {
+      // 分析が失敗した時点でアップロード済み画像を Storage に残さない。
+      if (uploadedUrl) {
+        void deleteUploadedImagesAction({ urls: [uploadedUrl] });
+      }
+      setUploadedUrl(null);
+      setPreviewUrl(null);
       setErrorMessage(
         err instanceof Error ? err.message : "分析に失敗しました",
       );
@@ -162,9 +177,9 @@ export function OotdNewPageClient() {
     setIsSubmitting(true);
     setErrorMessage(null);
 
+    let stickerUrl: string | undefined;
     try {
       // スティッカー画像を生成（失敗しても登録は続行）
-      let stickerUrl: string | undefined;
       try {
         const stickerRes = await fetch("/api/ootd/sticker", {
           method: "POST",
@@ -202,6 +217,16 @@ export function OotdNewPageClient() {
 
       router.push("/ootd");
     } catch (err) {
+      // 投稿失敗時は Storage に残ったアップロード画像とスティッカーを掃除する。
+      // ここで失敗してもユーザに見せるエラーは元の登録失敗のままにする。
+      const orphans = [uploadedUrl, stickerUrl].filter(
+        (u): u is string => typeof u === "string" && u.length > 0,
+      );
+      if (orphans.length > 0) {
+        void deleteUploadedImagesAction({ urls: orphans });
+      }
+      setUploadedUrl(null);
+      setPreviewUrl(null);
       setErrorMessage(
         err instanceof Error ? err.message : "登録に失敗しました",
       );
