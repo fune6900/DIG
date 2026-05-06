@@ -6,6 +6,17 @@
 
 ## リリースノート
 
+### v0.9.2 — 2026-05-06
+
+**🔴 hotfix: 本番で Supabase Storage 画像が `<Image>` で表示されない問題を修正**
+
+- `next.config.ts` に `images.remotePatterns` を追加し、Supabase Storage の公開 URL を Next.js `<Image>` で許可
+- ホスト名は `process.env.SUPABASE_URL` から派生（ハードコード回避、`lib/storage.ts` と同じ env を参照）
+- pathname を `/storage/v1/object/public/**` に絞り、ホスト全体の不要な開放を避ける
+- `SUPABASE_URL` 未設定時は空配列にフォールバック（ローカル開発で env 無しでも build を壊さない）
+
+---
+
 ### v0.9.1 — 2026-05-04
 
 **🔴 hotfix: 本番 OOTD 登録の analyze/sticker 400 + SP アップローダ 2 択シート復元**
