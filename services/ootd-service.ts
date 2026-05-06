@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { deleteImage } from "@/lib/storage";
 import {
   ColorPaletteItemSchema,
   StyleItemSchema,
@@ -100,6 +101,28 @@ export async function createOotd(
 }
 
 export async function deleteOotd(id: string): Promise<void> {
+  const record = await prisma.ootd.findUnique({
+    where: { id },
+    select: { imageUrl: true, stickerUrl: true },
+  });
+
+  // Storage 削除は best-effort。失敗しても DB 削除は続行する。
+  // 失敗時は孤立画像が残るが、投稿削除という主目的を阻害しない方を優先する。
+  if (record) {
+    const targets = [record.imageUrl, record.stickerUrl].filter(
+      (url): url is string => typeof url === "string" && url.length > 0,
+    );
+    await Promise.all(
+      targets.map(async (url) => {
+        try {
+          await deleteImage(url);
+        } catch (error) {
+          console.error("[deleteOotd] storage delete failed", { url, error });
+        }
+      }),
+    );
+  }
+
   await prisma.ootd.delete({
     where: { id },
   });
