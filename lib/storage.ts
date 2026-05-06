@@ -204,9 +204,18 @@ function extractSupabasePathFromPublicUrl(
 
   const prefix = `/storage/v1/object/public/${bucket}/`;
   if (!parsed.pathname.startsWith(prefix)) return null;
-  const path = parsed.pathname.slice(prefix.length);
-  if (!path || path.includes("..")) return null;
-  return decodeURIComponent(path);
+  const raw = parsed.pathname.slice(prefix.length);
+  if (!raw) return null;
+  // malformed な % シーケンスで URIError が伝播するのを防ぐ。
+  // `..` 検査も decode 後に行う（`%2E%2E` のような encoded traversal を取りこぼさないため）。
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(raw);
+  } catch {
+    return null;
+  }
+  if (decoded.includes("..")) return null;
+  return decoded;
 }
 
 async function deleteLocal(imageUrl: string): Promise<void> {

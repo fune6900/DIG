@@ -178,6 +178,7 @@ export function OotdNewPageClient() {
     setErrorMessage(null);
 
     let stickerUrl: string | undefined;
+    let createdSuccessfully = false;
     try {
       // スティッカー画像を生成（失敗しても登録は続行）
       try {
@@ -215,23 +216,30 @@ export function OotdNewPageClient() {
         throw new Error(result.error.message);
       }
 
-      router.push("/ootd");
+      // ここを過ぎたら DB 保存済み。以降の例外（router.push 等）で
+      // Storage を消すと「DB は残っているのに画像が無い」逆 orphan が発生するため、
+      // catch 側でクリーンアップ対象から除外する。
+      createdSuccessfully = true;
     } catch (err) {
-      // 投稿失敗時は Storage に残ったアップロード画像とスティッカーを掃除する。
-      // ここで失敗してもユーザに見せるエラーは元の登録失敗のままにする。
-      const orphans = [uploadedUrl, stickerUrl].filter(
-        (u): u is string => typeof u === "string" && u.length > 0,
-      );
-      if (orphans.length > 0) {
-        void deleteUploadedImagesAction({ urls: orphans });
+      if (!createdSuccessfully) {
+        const orphans = [uploadedUrl, stickerUrl].filter(
+          (u): u is string => typeof u === "string" && u.length > 0,
+        );
+        if (orphans.length > 0) {
+          void deleteUploadedImagesAction({ urls: orphans });
+        }
+        setUploadedUrl(null);
+        setPreviewUrl(null);
       }
-      setUploadedUrl(null);
-      setPreviewUrl(null);
       setErrorMessage(
         err instanceof Error ? err.message : "登録に失敗しました",
       );
     } finally {
       setIsSubmitting(false);
+    }
+
+    if (createdSuccessfully) {
+      router.push("/ootd");
     }
   }
 

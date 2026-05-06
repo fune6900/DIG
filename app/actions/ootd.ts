@@ -7,6 +7,7 @@ import {
   createOotd,
   deleteOotd,
 } from "@/services/ootd-service";
+import { prisma } from "@/lib/prisma";
 import { deleteImage } from "@/lib/storage";
 import { CreateOotdInputSchema, SortOrderSchema } from "@/types/ootd";
 import type { Ootd } from "@/types/ootd";
@@ -111,13 +112,20 @@ export async function deleteOotdAction(
 }
 
 const DeleteUploadedImagesInputSchema = z.object({
-  urls: z.array(z.string().min(1)).max(8),
+  urls: z.array(z.string().url()).min(1).max(8),
 });
 
 /**
  * 投稿失敗時に Storage 上に取り残されたアップロード画像を掃除する。
  * クライアントから service_role を使わせないためのラッパ。
  * 失敗は無視して常に成功扱いにする（best-effort cleanup）。
+ *
+ * セキュリティ:
+ *   現状 DIG には認証基盤が無いため、Server Action のセッション認可ができない。
+ *   そこで「DB 上の OOTD レコードに既に紐付いている URL は削除しない」という
+ *   ガードを入れて、攻撃者が他人の投稿画像を消せないようにしている。
+ *   削除可能なのは「まだ DB に登録されていない孤児アップロードのみ」。
+ *   将来 auth を導入したらセッションユーザーとアップロード元の照合に置き換える。
  */
 export async function deleteUploadedImagesAction(
   input: unknown,
@@ -129,8 +137,25 @@ export async function deleteUploadedImagesAction(
       error: { message: "Invalid input", code: "VALIDATION_ERROR" },
     };
   }
+
+  const referenced = await prisma.ootd.findMany({
+    where: {
+      OR: [
+        { imageUrl: { in: parsed.data.urls } },
+        { stickerUrl: { in: parsed.data.urls } },
+      ],
+    },
+    select: { imageUrl: true, stickerUrl: true },
+  });
+  const referencedSet = new Set<string>();
+  for (const r of referenced) {
+    referencedSet.add(r.imageUrl);
+    if (r.stickerUrl) referencedSet.add(r.stickerUrl);
+  }
+  const orphans = parsed.data.urls.filter((u) => !referencedSet.has(u));
+
   await Promise.all(
-    parsed.data.urls.map(async (url) => {
+    orphans.map(async (url) => {
       try {
         await deleteImage(url);
       } catch (error) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Badge } from "@/components/ui/Badge";
@@ -25,6 +25,17 @@ export function OotdDetail({ ootd, onDelete, onBack }: OotdDetailProps) {
   const [portalNode] = useState<HTMLElement | null>(() =>
     typeof document !== "undefined" ? document.body : null,
   );
+
+  // Escape で確認ダイアログを閉じる。背景スクロールロックは親モーダル側で
+  // 実装済み（OotdDetailModal）のため、ここでは追加しない。
+  useEffect(() => {
+    if (!showConfirm) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowConfirm(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [showConfirm]);
 
   const formattedDate = new Intl.DateTimeFormat("en-US", {
     month: "long",
