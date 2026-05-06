@@ -1,5 +1,5 @@
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { writeFile, mkdir, unlink } from "fs/promises";
+import { join, resolve, sep } from "path";
 import { randomUUID } from "crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
@@ -145,9 +145,7 @@ export async function createSignedUploadUrl(
 
   const bucket = process.env.SUPABASE_STORAGE_BUCKET;
   if (!bucket) {
-    throw new Error(
-      "createSignedUploadUrl requires SUPABASE_STORAGE_BUCKET",
-    );
+    throw new Error("createSignedUploadUrl requires SUPABASE_STORAGE_BUCKET");
   }
 
   const client = getSupabaseClient();
@@ -177,6 +175,84 @@ export async function createSignedUploadUrl(
     path,
     publicUrl: publicData.publicUrl,
   };
+}
+
+/**
+ * 公開URLからバケット内 path を逆算する。
+ * Supabase の公開URLは `https://<host>/storage/v1/object/public/<bucket>/<path>` 形式。
+ * 期待形式から外れたら null を返し、削除側で no-op として扱う。
+ */
+function extractSupabasePathFromPublicUrl(
+  publicUrl: string,
+  bucket: string,
+): string | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(publicUrl);
+  } catch {
+    return null;
+  }
+
+  const expectedHost = (() => {
+    try {
+      return new URL(process.env.SUPABASE_URL ?? "").host;
+    } catch {
+      return null;
+    }
+  })();
+  if (!expectedHost || parsed.host !== expectedHost) return null;
+
+  const prefix = `/storage/v1/object/public/${bucket}/`;
+  if (!parsed.pathname.startsWith(prefix)) return null;
+  const path = parsed.pathname.slice(prefix.length);
+  if (!path || path.includes("..")) return null;
+  return decodeURIComponent(path);
+}
+
+async function deleteLocal(imageUrl: string): Promise<void> {
+  if (!imageUrl.startsWith("/uploads/")) return;
+  const uploadsDir = resolve(process.cwd(), "public", "uploads");
+  const relativePath = imageUrl.slice("/uploads/".length);
+  const filePath = resolve(uploadsDir, relativePath);
+  if (filePath !== uploadsDir && !filePath.startsWith(`${uploadsDir}${sep}`)) {
+    throw new Error("Invalid image URL");
+  }
+  try {
+    await unlink(filePath);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return;
+    throw err;
+  }
+}
+
+async function deleteSupabase(publicUrl: string): Promise<void> {
+  const bucket = process.env.SUPABASE_STORAGE_BUCKET;
+  if (!bucket) {
+    throw new Error("STORAGE_DRIVER=supabase requires SUPABASE_STORAGE_BUCKET");
+  }
+  const path = extractSupabasePathFromPublicUrl(publicUrl, bucket);
+  if (!path) return;
+  const client = getSupabaseClient();
+  const { error } = await client.storage.from(bucket).remove([path]);
+  if (error) {
+    throw new Error(`Supabase delete failed: ${error.message}`);
+  }
+}
+
+/**
+ * 公開URL（uploadImage が返した URL）から実体ファイルを削除する。
+ * - ローカルドライバ: public/uploads/ 配下のファイルを unlink
+ * - Supabase ドライバ: 公開URLからバケット相対 path を逆算して remove
+ *
+ * 期待外の URL は path 解決に失敗するため no-op になる（破壊的副作用なし）。
+ */
+export async function deleteImage(publicUrl: string): Promise<void> {
+  const driver = resolveDriver();
+  if (driver === "supabase") {
+    await deleteSupabase(publicUrl);
+    return;
+  }
+  await deleteLocal(publicUrl);
 }
 
 /**
