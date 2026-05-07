@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { OotdAnalysisModal } from "@/components/features/ootd/OotdAnalysisModal";
@@ -17,6 +17,9 @@ import type { OotdAnalysisResult } from "@/types/ootd";
 
 type Step = "upload" | "analysis" | "register";
 
+// HEIC/HEIF はブラウザが画像として復号できないため、選択直後にサーバーで JPEG 化する。
+const HEIC_TYPES = new Set(["image/heic", "image/heif"]);
+
 export function OotdNewPageClient() {
   const router = useRouter();
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -25,9 +28,10 @@ export function OotdNewPageClient() {
   const [isChooserOpen, setIsChooserOpen] = useState(false);
 
   const [step, setStep] = useState<Step>("upload");
+  // 選択中のファイル本体。Storage には投稿確定時まで上げない。
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isPreparingFile, setIsPreparingFile] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<
@@ -36,11 +40,14 @@ export function OotdNewPageClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // HEIC/HEIF は他ブラウザで表示できないため、サーバーサイドで JPEG 変換する経路に回す。
-  const HEIC_TYPES = new Set(["image/heic", "image/heif"]);
+  // ObjectURL のリーク防止: previewUrl が差し替わる／アンマウントされるたびに revoke する。
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   async function uploadDirect(file: File): Promise<string> {
-    // 1. /api/upload-url で署名URL取得
     const issueRes = await fetch("/api/upload-url", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -60,7 +67,6 @@ export function OotdNewPageClient() {
       );
     }
 
-    // 2. 署名URLへ直接 PUT
     const putRes = await fetch(issueJson.signedUrl, {
       method: "PUT",
       headers: { "Content-Type": file.type },
@@ -73,56 +79,58 @@ export function OotdNewPageClient() {
     return issueJson.publicUrl;
   }
 
-  async function uploadViaServer(file: File): Promise<string> {
+  async function convertHeicToJpegViaServer(file: File): Promise<File> {
     const formData = new FormData();
     formData.append("image", file);
-
-    const res = await fetch("/api/upload", {
+    const res = await fetch("/api/ootd/heic-to-jpeg", {
       method: "POST",
       body: formData,
     });
-    const json = (await res.json()) as {
-      url?: string;
-      error?: { message: string };
-    };
-
-    if (!res.ok || !json.url) {
-      throw new Error(json.error?.message ?? "アップロードに失敗しました");
+    if (!res.ok) {
+      let message = "HEIC 変換に失敗しました";
+      try {
+        const json = (await res.json()) as { error?: { message: string } };
+        if (json.error?.message) message = json.error.message;
+      } catch {
+        // ignore parse failure
+      }
+      throw new Error(message);
     }
-    return json.url;
+    const blob = await res.blob();
+    const baseName = file.name.replace(/\.(heic|heif)$/i, "");
+    return new File([blob], `${baseName || "image"}.jpg`, {
+      type: "image/jpeg",
+    });
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 同一セッションで画像を選び直した場合、旧 uploadedUrl の Storage 実体を残さない。
-    if (uploadedUrl) {
-      void deleteUploadedImagesAction({ urls: [uploadedUrl] });
-      setUploadedUrl(null);
-    }
-
     setErrorMessage(null);
-    setPreviewUrl(URL.createObjectURL(file));
-    setIsUploading(true);
+    setIsPreparingFile(true);
 
     try {
-      const url = HEIC_TYPES.has(file.type)
-        ? await uploadViaServer(file)
-        : await uploadDirect(file);
-      setUploadedUrl(url);
+      const prepared = HEIC_TYPES.has(file.type.toLowerCase())
+        ? await convertHeicToJpegViaServer(file)
+        : file;
+      // 古い preview を捨てて新しい ObjectURL を作る。
+      // useEffect の cleanup で前回 URL が revoke される。
+      setPreviewUrl(URL.createObjectURL(prepared));
+      setSelectedFile(prepared);
     } catch (err) {
       setErrorMessage(
-        err instanceof Error ? err.message : "アップロードに失敗しました",
+        err instanceof Error ? err.message : "画像の準備に失敗しました",
       );
+      setSelectedFile(null);
       setPreviewUrl(null);
     } finally {
-      setIsUploading(false);
+      setIsPreparingFile(false);
     }
   }
 
   async function handleAnalyze() {
-    if (!uploadedUrl) return;
+    if (!selectedFile) return;
 
     setErrorMessage(null);
     setIsAnalyzing(true);
@@ -130,10 +138,11 @@ export function OotdNewPageClient() {
     setStep("analysis");
 
     try {
+      const formData = new FormData();
+      formData.append("image", selectedFile);
       const res = await fetch("/api/ootd/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: uploadedUrl }),
+        body: formData,
       });
       const json = (await res.json()) as {
         data?: OotdAnalysisResult;
@@ -146,12 +155,6 @@ export function OotdNewPageClient() {
 
       setAnalysisResult(json.data);
     } catch (err) {
-      // 分析が失敗した時点でアップロード済み画像を Storage に残さない。
-      if (uploadedUrl) {
-        void deleteUploadedImagesAction({ urls: [uploadedUrl] });
-      }
-      setUploadedUrl(null);
-      setPreviewUrl(null);
       setErrorMessage(
         err instanceof Error ? err.message : "分析に失敗しました",
       );
@@ -173,14 +176,18 @@ export function OotdNewPageClient() {
   }
 
   async function handleRegisterSubmit(data: { tags: string[] }) {
-    if (!uploadedUrl || !analysisResult) return;
+    if (!selectedFile || !analysisResult) return;
 
     setIsSubmitting(true);
     setErrorMessage(null);
 
+    let uploadedUrl: string | undefined;
     let stickerUrl: string | undefined;
     let createdSuccessfully = false;
     try {
+      // 投稿が確定したこの時点で初めて Storage にアップロードする。
+      uploadedUrl = await uploadDirect(selectedFile);
+
       // スティッカー画像を生成（失敗しても登録は続行）
       try {
         const stickerRes = await fetch("/api/ootd/sticker", {
@@ -229,8 +236,6 @@ export function OotdNewPageClient() {
         if (orphans.length > 0) {
           void deleteUploadedImagesAction({ urls: orphans });
         }
-        setUploadedUrl(null);
-        setPreviewUrl(null);
       }
       setErrorMessage(
         err instanceof Error ? err.message : "登録に失敗しました",
@@ -246,7 +251,17 @@ export function OotdNewPageClient() {
 
   return (
     <div className="space-y-8">
-      <OotdNewHeader isSubmitting={isSubmitting} />
+      <OotdNewHeader
+        isSubmitting={isSubmitting}
+        {...(step === "register"
+          ? {
+              onBack: () => {
+                setStep("analysis");
+                setIsModalOpen(true);
+              },
+            }
+          : {})}
+      />
 
       {errorMessage && (
         <p
@@ -279,6 +294,7 @@ export function OotdNewPageClient() {
                   fill
                   sizes="192px"
                   className="object-cover"
+                  unoptimized
                 />
               </div>
             ) : (
@@ -325,13 +341,13 @@ export function OotdNewPageClient() {
           <button
             type="button"
             onClick={handleAnalyze}
-            disabled={!uploadedUrl || isUploading}
+            disabled={!selectedFile || isPreparingFile}
             className="inline-flex w-full items-center justify-center gap-2 rounded-sm bg-denim py-3 text-sm font-medium tracking-widest text-offwhite hover:bg-denim-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
           >
-            {isUploading ? (
+            {isPreparingFile ? (
               <>
                 <Spinner size="sm" variant="light" />
-                アップロード中...
+                画像を準備中...
               </>
             ) : (
               <>
@@ -343,10 +359,10 @@ export function OotdNewPageClient() {
         </div>
       )}
 
-      {step === "register" && analysisResult && uploadedUrl && (
+      {step === "register" && analysisResult && previewUrl && (
         <OotdRegisterForm
           analysisResult={analysisResult}
-          imageUrl={uploadedUrl}
+          imageUrl={previewUrl}
           onSubmit={handleRegisterSubmit}
           isSubmitting={isSubmitting}
         />
@@ -400,7 +416,7 @@ export function OotdNewPageClient() {
         isOpen={isModalOpen}
         isLoading={isAnalyzing}
         analysisResult={analysisResult}
-        imageUrl={uploadedUrl ?? undefined}
+        imageUrl={previewUrl ?? undefined}
         onNext={handleModalNext}
         onClose={handleModalClose}
       />

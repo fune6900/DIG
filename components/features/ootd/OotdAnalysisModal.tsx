@@ -32,11 +32,10 @@ export function OotdAnalysisModal({
 
   return (
     <>
-      {/* Backdrop: 分析中は閉じない（生成処理が止まらないようにする） */}
+      {/* Backdrop: 分析中も結果プレビュー中も閉じない（誤タップで処理キャンセル / 離脱を防ぐ） */}
       <div
         data-testid="ootd-analysis-backdrop"
         className="fixed inset-0 z-40 bg-canvas/60 backdrop-blur-sm"
-        onClick={isLoading ? undefined : onClose}
         aria-hidden="true"
       />
 
@@ -87,6 +86,7 @@ export function OotdAnalysisModal({
                   fill
                   sizes="(max-width: 768px) 100vw, 560px"
                   className="object-cover"
+                  unoptimized
                 />
               </div>
             )}
