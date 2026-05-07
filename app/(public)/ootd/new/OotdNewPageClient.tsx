@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { OotdAnalysisModal } from "@/components/features/ootd/OotdAnalysisModal";
+import { OotdNewHeader } from "@/components/features/ootd/OotdNewHeader";
 import { OotdRegisterForm } from "@/components/features/ootd/OotdRegisterForm";
 import {
   createOotdAction,
@@ -245,6 +246,8 @@ export function OotdNewPageClient() {
 
   return (
     <div className="space-y-8">
+      <OotdNewHeader isSubmitting={isSubmitting} />
+
       {errorMessage && (
         <p
           role="alert"

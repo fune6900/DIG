@@ -32,10 +32,11 @@ export function OotdAnalysisModal({
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop: 分析中は閉じない（生成処理が止まらないようにする） */}
       <div
+        data-testid="ootd-analysis-backdrop"
         className="fixed inset-0 z-40 bg-canvas/60 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={isLoading ? undefined : onClose}
         aria-hidden="true"
       />
 
