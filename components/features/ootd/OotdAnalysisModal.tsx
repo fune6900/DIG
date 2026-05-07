@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Spinner } from "@/components/ui/Spinner";
 import { OotdColorPalette } from "@/components/features/ootd/OotdColorPalette";
 import { OotdStyleGauge } from "@/components/features/ootd/OotdStyleGauge";
-import { OotdRadarChart } from "@/components/features/ootd/OotdRadarChart";
+import { OotdEvaluationRadar } from "@/components/features/ootd/OotdEvaluationRadar";
 import { OotdItemList } from "@/components/features/ootd/OotdItemList";
 import { ArrowRightIcon, CloseIcon } from "@/components/ui/icons";
 import type { OotdAnalysisResult } from "@/types/ootd";
@@ -111,8 +111,16 @@ export function OotdAnalysisModal({
                 Style
               </h3>
               <OotdStyleGauge styles={analysisResult.styles} />
-              <OotdRadarChart styles={analysisResult.styles} />
             </div>
+
+            {analysisResult.radarScores && (
+              <div className="space-y-3">
+                <h3 className="text-xs font-bold tracking-widest uppercase text-denim/40 dark:text-offwhite/30">
+                  Evaluation
+                </h3>
+                <OotdEvaluationRadar scores={analysisResult.radarScores} />
+              </div>
+            )}
 
             {analysisResult.detectedItems.length > 0 && (
               <div className="space-y-3">
