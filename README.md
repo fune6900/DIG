@@ -6,6 +6,23 @@
 
 ## リリースノート
 
+### v0.9.3 — 2026-05-08
+
+**OOTD まわりの不具合 4 件修正 + 未使用 Knowledge テーブル撤去**
+
+- SP 版 #OOTD 詳細画面の削除確認ダイアログがタップで反応しない問題を修正（`createPortal` で `document.body` に逃がし、親モーダルの transform stacking を回避）
+- AI 診断後プレビュー画面のレーダーチャートを、投稿後の詳細画面と同じ 6 軸（casual / subdued / presence / subtle / formal / colorful）の `OotdEvaluationRadar` に統一。未使用となった `OotdRadarChart` を撤去
+- OOTD 削除時に Supabase Storage 上の画像（`imageUrl` / `stickerUrl`）も自動削除されるようにし、孤児画像の蓄積を解消（`lib/storage.ts` に `deleteImage` を新設、削除失敗は best-effort でログのみ）
+- OOTD 投稿フローの失敗時（分析失敗・登録失敗・画像差し替え）に Storage 上のアップロード画像を自動クリーンアップする Server Action `deleteUploadedImagesAction` を追加
+  - 入力 URL を `z.url()` で厳格化、`.min(1)` で空配列を拒否
+  - DB の OOTD レコードに既に紐付いている URL は削除拒否（auth 不在下で「他人の投稿画像を消される」攻撃ベクタを塞ぐ代替防御）
+  - `router.push` を `try` 外へ移動し、DB 保存後の例外で Storage を消す逆 orphan を防止
+- 確認ダイアログに Escape キークローズを追加
+- `lib/storage.ts#extractSupabasePathFromPublicUrl` の `decodeURIComponent` を `try/catch` で囲み、`..` 検査を decode 後へ移動（`%2E%2E` 経由の path traversal 防御）
+- 未使用の Knowledge テーブルを撤去するマイグレーション `20260506000000_drop_knowledge` を追加（`IF EXISTS` 付きで未反映環境でも安全に実行可能）
+
+---
+
 ### v0.9.2 — 2026-05-06
 
 **🔴 hotfix: 本番で Supabase Storage 画像が `<Image>` で表示されない問題を修正**
