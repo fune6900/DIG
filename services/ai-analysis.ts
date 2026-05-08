@@ -112,7 +112,7 @@ export async function analyzeOutfit(
   return OotdAnalysisResultSchema.parse(normalizeAnalysisResult(parsed));
 }
 
-function normalizeColorCode(code: string): string {
+export function normalizeColorCode(code: string): string {
   // 3桁 hex: #RGB → #RRGGBB
   const threeDigit = /^#([0-9A-Fa-f]{3})$/.exec(code);
   if (threeDigit) {
@@ -131,7 +131,7 @@ function normalizeColorCode(code: string): string {
   return code;
 }
 
-function normalizeAnalysisResult(raw: unknown): unknown {
+export function normalizeAnalysisResult(raw: unknown): unknown {
   if (typeof raw !== "object" || raw === null) return raw;
   const obj = raw as Record<string, unknown>;
   if (Array.isArray(obj.colorPalette)) {
