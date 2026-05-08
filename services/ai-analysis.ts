@@ -109,5 +109,40 @@ export async function analyzeOutfit(
     : text;
 
   const parsed = JSON.parse(jsonText) as unknown;
-  return OotdAnalysisResultSchema.parse(parsed);
+  return OotdAnalysisResultSchema.parse(normalizeAnalysisResult(parsed));
+}
+
+export function normalizeColorCode(code: string): string {
+  // 3桁 hex: #RGB → #RRGGBB
+  const threeDigit = /^#([0-9A-Fa-f]{3})$/.exec(code);
+  if (threeDigit) {
+    const [r, g, b] = threeDigit[1].split("");
+    return `#${r}${r}${g}${g}${b}${b}`.toUpperCase();
+  }
+  // 8桁 hex（alpha付き）: #RRGGBBAA → #RRGGBB
+  const eightDigit = /^#([0-9A-Fa-f]{6})[0-9A-Fa-f]{2}$/.exec(code);
+  if (eightDigit) {
+    return `#${eightDigit[1]}`.toUpperCase();
+  }
+  // 6桁 hex: 大文字正規化
+  if (/^#[0-9A-Fa-f]{6}$/.test(code)) {
+    return code.toUpperCase();
+  }
+  return code;
+}
+
+export function normalizeAnalysisResult(raw: unknown): unknown {
+  if (typeof raw !== "object" || raw === null) return raw;
+  const obj = raw as Record<string, unknown>;
+  if (Array.isArray(obj.colorPalette)) {
+    obj.colorPalette = obj.colorPalette.map((item: unknown) => {
+      if (typeof item !== "object" || item === null) return item;
+      const i = item as Record<string, unknown>;
+      if (typeof i.colorCode === "string") {
+        i.colorCode = normalizeColorCode(i.colorCode);
+      }
+      return i;
+    });
+  }
+  return obj;
 }
