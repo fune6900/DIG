@@ -21,52 +21,52 @@ const ALLOWED_MIME_TYPES = new Set<string>([
  * 出力: { data: OotdAnalysisResult, error: null }
  */
 export async function POST(request: Request) {
-  const formData = await request.formData();
-  const file = formData.get("image");
-
-  if (!file || !(file instanceof File)) {
-    return NextResponse.json(
-      {
-        data: null,
-        error: { message: "No image file provided", code: "MISSING_FILE" },
-      },
-      { status: 400 },
-    );
-  }
-
-  const mimeType = file.type.toLowerCase();
-  if (!ALLOWED_MIME_TYPES.has(mimeType)) {
-    return NextResponse.json(
-      {
-        data: null,
-        error: {
-          message: "Only image files are allowed",
-          code: "INVALID_FILE_TYPE",
-        },
-      },
-      { status: 400 },
-    );
-  }
-
-  if (file.size > MAX_UPLOAD_SIZE_BYTES) {
-    return NextResponse.json(
-      {
-        data: null,
-        error: { message: "File is too large", code: "FILE_TOO_LARGE" },
-      },
-      { status: 413 },
-    );
-  }
-
   try {
+    const formData = await request.formData();
+    const file = formData.get("image");
+
+    if (!file || !(file instanceof File)) {
+      return NextResponse.json(
+        {
+          data: null,
+          error: { message: "No image file provided", code: "MISSING_FILE" },
+        },
+        { status: 400 },
+      );
+    }
+
+    const mimeType = file.type.toLowerCase();
+    if (!ALLOWED_MIME_TYPES.has(mimeType)) {
+      return NextResponse.json(
+        {
+          data: null,
+          error: {
+            message: "Only image files are allowed",
+            code: "INVALID_FILE_TYPE",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+      return NextResponse.json(
+        {
+          data: null,
+          error: { message: "File is too large", code: "FILE_TOO_LARGE" },
+        },
+        { status: 413 },
+      );
+    }
+
     const bytes = await file.arrayBuffer();
     // 入力 Buffer と HEIC 変換後 Buffer は @types/node 上で異なる generic 引数を持つため、
     // 受け側の型を最も広い ArrayBufferLike に揃えて再代入を許容する。
     let buffer: Buffer<ArrayBufferLike> = Buffer.from(bytes);
-    let geminiMime = mimeType;
+    // "image/jpg" は非標準。Gemini API は "image/jpeg" のみ受け付けるため正規化する。
+    let geminiMime = mimeType === "image/jpg" ? "image/jpeg" : mimeType;
 
     if (HEIC_MIME_SET.has(mimeType)) {
-      // Gemini 側で HEIC を直接扱えないケースに備え、JPEG に正規化する。
       buffer = await convertHeicToJpeg(buffer);
       geminiMime = "image/jpeg";
     }
