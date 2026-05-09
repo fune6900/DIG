@@ -59,6 +59,12 @@
       "Bash(git diff *)",
       "Bash(git fetch *)",
       "Bash(gh pr *)",
+      "Bash(gh run watch *)",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_console_messages",
+      "mcp__notion__notion-fetch",
+      "mcp__notion__notion-search",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:npmjs.org)"
     ],
