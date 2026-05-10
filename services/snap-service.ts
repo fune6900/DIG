@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import type { SnapSummary } from "@/types/snap";
+import { Prisma } from "@prisma/client";
+import type { Snap, SnapSummary } from "@/types/snap";
 import type { UnsplashPhoto } from "@/services/unsplash-service";
 
 export async function findSnapsByQuery(params: {
@@ -20,6 +21,46 @@ export async function findSnapsByQuery(params: {
       sourceUrl: true,
     },
   });
+  return records;
+}
+
+export async function getSnapById(id: string): Promise<Snap | null> {
+  return prisma.snap.findUnique({ where: { id } }) as Promise<Snap | null>;
+}
+
+export async function updateSnap(
+  id: string,
+  data: Prisma.SnapUpdateInput,
+): Promise<Snap> {
+  return prisma.snap.update({ where: { id }, data }) as Promise<Snap>;
+}
+
+export async function findSimilarSnaps(params: {
+  snapId: string;
+  searchQueries: string[];
+  page: number;
+  pageSize: number;
+}): Promise<SnapSummary[]> {
+  const { snapId, searchQueries, page, pageSize } = params;
+
+  if (searchQueries.length === 0) return [];
+
+  const records = await prisma.snap.findMany({
+    where: {
+      id: { not: snapId },
+      searchQueries: { hasSome: searchQueries },
+    },
+    orderBy: { createdAt: "desc" },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+    select: {
+      id: true,
+      imageUrl: true,
+      authorName: true,
+      sourceUrl: true,
+    },
+  });
+
   return records;
 }
 
