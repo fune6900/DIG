@@ -83,6 +83,12 @@ export const CreateOotdInputSchema = z.object({
 });
 export type CreateOotdInput = z.infer<typeof CreateOotdInputSchema>;
 
+export const UpdateOotdInputSchema = z.object({
+  date: z.date(),
+  tags: z.array(z.string().min(1)).max(3),
+});
+export type UpdateOotdInput = z.infer<typeof UpdateOotdInputSchema>;
+
 export const OotdListItemSchema = OotdSchema.pick({
   id: true,
   imageUrl: true,

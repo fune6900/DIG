@@ -3,6 +3,7 @@ import {
   findOotdById,
   createOotd,
   deleteOotd,
+  updateOotd,
 } from "@/services/ootd-service";
 
 // ---------------------------------------------------------------------------
@@ -19,6 +20,7 @@ vi.mock("@/lib/prisma", () => ({
       findUnique: vi.fn(),
       create: vi.fn(),
       delete: vi.fn(),
+      update: vi.fn(),
     },
   },
 }));
@@ -220,5 +222,52 @@ describe("deleteOotd", () => {
       where: { id: "uuid-a" },
     });
     expect(prisma.ootd.delete).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// updateOotd
+// ---------------------------------------------------------------------------
+describe("updateOotd", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("date と tags を更新して結果を返す", async () => {
+    const newDate = new Date("2026-05-12");
+    const newTags = ["古着", "リメイク"];
+    const updated = {
+      ...FIXTURE_A,
+      date: newDate,
+      tags: newTags,
+    };
+    vi.mocked(prisma.ootd.update).mockResolvedValue(updated);
+
+    const result = await updateOotd("uuid-a", {
+      date: newDate,
+      tags: newTags,
+    });
+
+    expect(prisma.ootd.update).toHaveBeenCalledWith({
+      where: { id: "uuid-a" },
+      data: { date: newDate, tags: newTags },
+    });
+    expect(result.date).toEqual(newDate);
+    expect(result.tags).toEqual(newTags);
+  });
+
+  it("空配列のタグでも更新できる", async () => {
+    const updated = {
+      ...FIXTURE_A,
+      tags: [],
+    };
+    vi.mocked(prisma.ootd.update).mockResolvedValue(updated);
+
+    const result = await updateOotd("uuid-a", {
+      date: FIXTURE_A.date,
+      tags: [],
+    });
+
+    expect(result.tags).toEqual([]);
   });
 });
