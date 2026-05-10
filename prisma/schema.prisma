@@ -23,3 +23,30 @@ model Ootd {
 
   @@index([date])
 }
+
+model Snap {
+  id            String    @id @default(uuid())
+  source        String
+  externalId    String
+  imageUrl      String
+  sourceUrl     String
+  authorName    String?
+  authorUrl     String?
+  title         String?
+  description   String?
+  tags          String[]
+  searchQueries String[]
+  oneLiner      String?
+  colorPalette  Json?
+  styles        Json?
+  aiDescription String?
+  detectedItems Json?
+  radarScores   Json?
+  analyzedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([source, externalId])
+  @@index([searchQueries], type: Gin)
+  @@index([createdAt])
+}

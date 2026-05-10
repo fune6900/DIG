@@ -1,0 +1,94 @@
+import { prisma } from "@/lib/prisma";
+import type { SnapSummary } from "@/types/snap";
+import type { UnsplashPhoto } from "@/services/unsplash-service";
+
+export async function findSnapsByQuery(params: {
+  query: string;
+  page: number;
+  pageSize: number;
+}): Promise<SnapSummary[]> {
+  const { query, page, pageSize } = params;
+  const records = await prisma.snap.findMany({
+    where: { searchQueries: { has: query } },
+    orderBy: { createdAt: "desc" },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+    select: {
+      id: true,
+      imageUrl: true,
+      authorName: true,
+      sourceUrl: true,
+    },
+  });
+  return records;
+}
+
+/**
+ * Unsplash から取得した写真群を Snap テーブルにキャッシュする。
+ *
+ * - 新規写真: `createMany({ skipDuplicates: true })` で 1 クエリにバルク INSERT
+ *   （N 件並列 upsert を発行していた旧実装の DB コネクション枯渇リスクを解消）
+ * - 既存写真: `searchQueries` に `query` が未登録のものだけ `update` で push
+ *   （同一画像が別キーワードでヒットした履歴を保持し、過去キーワードからの
+ *   再検索でも引き続き返るようにする）
+ *
+ * 競合: 別リクエストが同時に同 externalId を upsert する可能性は低いが、
+ * `createMany.skipDuplicates` で重複は黙殺、`update.searchQueries.push` は
+ * Prisma 内部で配列追記される。完全な原子性が必要になったら $transaction
+ * （Interactive）に切り替える。
+ */
+export async function upsertSnaps(
+  photos: UnsplashPhoto[],
+  query: string,
+): Promise<void> {
+  if (photos.length === 0) return;
+
+  const externalIds = photos.map((p) => p.id);
+  const existing = await prisma.snap.findMany({
+    where: {
+      source: "unsplash",
+      externalId: { in: externalIds },
+    },
+    select: { externalId: true, searchQueries: true },
+  });
+  const existingMap = new Map(
+    existing.map((e) => [e.externalId, e.searchQueries]),
+  );
+
+  const toCreate = photos.filter((p) => !existingMap.has(p.id));
+  const toAppend = photos.filter((p) => {
+    const queries = existingMap.get(p.id);
+    return queries !== undefined && !queries.includes(query);
+  });
+
+  if (toCreate.length > 0) {
+    await prisma.snap.createMany({
+      data: toCreate.map((photo) => ({
+        source: "unsplash",
+        externalId: photo.id,
+        imageUrl: photo.urls.regular,
+        sourceUrl: photo.links.html,
+        authorName: photo.user.name,
+        authorUrl: photo.user.links.html,
+        title: null,
+        description: photo.alt_description ?? photo.description,
+        tags: photo.tags?.map((t) => t.title) ?? [],
+        searchQueries: [query],
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  if (toAppend.length > 0) {
+    await Promise.all(
+      toAppend.map((photo) =>
+        prisma.snap.update({
+          where: {
+            source_externalId: { source: "unsplash", externalId: photo.id },
+          },
+          data: { searchQueries: { push: query } },
+        }),
+      ),
+    );
+  }
+}

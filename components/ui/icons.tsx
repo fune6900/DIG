@@ -36,6 +36,14 @@ export function ChevronRightIcon(props: IconProps) {
   );
 }
 
+export function ChevronUpIcon(props: IconProps) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" {...baseProps} {...props}>
+      <polyline points="18 15 12 9 6 15" />
+    </svg>
+  );
+}
+
 export function CloseIcon(props: IconProps) {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" {...baseProps} {...props}>
