@@ -10,8 +10,7 @@ import {
   createOotdAction,
   deleteUploadedImagesAction,
 } from "@/app/actions/ootd";
-import { ImageIcon, SparkleIcon } from "@/components/ui/icons";
-import { Spinner } from "@/components/ui/Spinner";
+import { ImageIcon } from "@/components/ui/icons";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { compressImage } from "@/lib/image-compress";
 import type { OotdAnalysisResult } from "@/types/ootd";
@@ -32,7 +31,7 @@ export function OotdNewPageClient() {
   // 選択中のファイル本体。Storage には投稿確定時まで上げない。
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isPreparingFile, setIsPreparingFile] = useState(false);
+  // HEIC 変換 → 圧縮 → AI 分析 を一連の loading として扱うための統合フラグ。
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<
@@ -109,7 +108,11 @@ export function OotdNewPageClient() {
     if (!file) return;
 
     setErrorMessage(null);
-    setIsPreparingFile(true);
+    // HEIC 変換 → 圧縮 → AI 分析 までを 1 つの loading として扱い、
+    // 手動の「AIで分析する」ボタンは廃止して即座にモーダルを開く。
+    setIsAnalyzing(true);
+    setIsModalOpen(true);
+    setStep("analysis");
 
     try {
       const heicConverted = HEIC_TYPES.has(file.type.toLowerCase())
@@ -117,32 +120,11 @@ export function OotdNewPageClient() {
         : file;
       // /api/ootd/analyze は Vercel の 4.5MB body limit を持つため、送信前に圧縮する。
       const prepared = await compressImage(heicConverted);
-      // 古い preview を捨てて新しい ObjectURL を作る。
-      // useEffect の cleanup で前回 URL が revoke される。
       setPreviewUrl(URL.createObjectURL(prepared));
       setSelectedFile(prepared);
-    } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : "画像の準備に失敗しました",
-      );
-      setSelectedFile(null);
-      setPreviewUrl(null);
-    } finally {
-      setIsPreparingFile(false);
-    }
-  }
 
-  async function handleAnalyze() {
-    if (!selectedFile) return;
-
-    setErrorMessage(null);
-    setIsAnalyzing(true);
-    setIsModalOpen(true);
-    setStep("analysis");
-
-    try {
       const formData = new FormData();
-      formData.append("image", selectedFile);
+      formData.append("image", prepared);
       const res = await fetch("/api/ootd/analyze", {
         method: "POST",
         body: formData,
@@ -161,6 +143,8 @@ export function OotdNewPageClient() {
       setErrorMessage(
         err instanceof Error ? err.message : "分析に失敗しました",
       );
+      setSelectedFile(null);
+      setPreviewUrl(null);
       setIsModalOpen(false);
       setStep("upload");
     } finally {
@@ -340,25 +324,6 @@ export function OotdNewPageClient() {
             aria-label="コーデ画像（写真ライブラリ）"
             tabIndex={-1}
           />
-
-          <button
-            type="button"
-            onClick={handleAnalyze}
-            disabled={!selectedFile || isPreparingFile}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-sm bg-denim py-3 text-sm font-medium tracking-widest text-offwhite hover:bg-denim-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
-          >
-            {isPreparingFile ? (
-              <>
-                <Spinner size="sm" variant="light" />
-                画像を準備中...
-              </>
-            ) : (
-              <>
-                <SparkleIcon width={16} height={16} />
-                AIで分析する
-              </>
-            )}
-          </button>
         </div>
       )}
 

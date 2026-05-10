@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, useRef, useCallback } from "react";
+import { getStickerPagePosition } from "@/lib/sticker-book-layout";
 import type { OotdSummary } from "@/types/ootd";
 
 interface OotdStickerBookProps {
@@ -29,18 +30,6 @@ function getTapeStyle(index: number) {
   return { hue, angle: angle.toFixed(1), offsetX };
 }
 
-function getPagePosition(index: number) {
-  const positions = [
-    { top: "8%", left: "4%" },
-    { top: "6%", left: "42%" },
-    { top: "5%", left: "74%" },
-    { top: "44%", left: "8%" },
-    { top: "46%", left: "46%" },
-    { top: "43%", left: "72%" },
-  ];
-  return positions[index % positions.length];
-}
-
 interface StickerProps {
   ootd: OotdSummary;
   localIndex: number;
@@ -50,7 +39,7 @@ interface StickerProps {
 
 function Sticker({ ootd, localIndex, globalIndex, onSelect }: StickerProps) {
   const tape = getTapeStyle(globalIndex);
-  const pos = getPagePosition(localIndex);
+  const pos = getStickerPagePosition(localIndex);
   const imgSrc = ootd.stickerUrl ?? ootd.imageUrl;
   const hasStickerCrop = !!ootd.stickerUrl;
 

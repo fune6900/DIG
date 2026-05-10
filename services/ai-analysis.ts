@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { OotdAnalysisResultSchema } from "@/types/ootd";
 import type { OotdAnalysisResult } from "@/types/ootd";
+import { STYLE_CATALOG } from "@/lib/style-catalog";
 
 /**
  * Notion 出典 (Master 提供):
@@ -34,7 +35,7 @@ const DESCRIPTION_EXAMPLES = [
 森ガールの本質は垂直方向のレイヤードにある。チェックのチュニック、セージ色のティアードスカート、ワイドパンツを重ねる。柔らかく、余白のあるシルエットが生まれる。天然素材とアースカラーが基調だ。パフスリーブやハイネックが、田園的なロマンティシズムを添える。遊び心のあるヘアアクセサリーと独特のボリューム感は、原宿のDIY精神を象徴している。身体のラインは重要ではない。質感と個人の物語を優先した表現だ。`,
 ];
 
-const SYSTEM_PROMPT = `You are a fashion editor analyzing an outfit photo. Output ONE JSON object (no markdown, no commentary) with exactly this structure:
+export const SYSTEM_PROMPT = `You are a fashion editor analyzing an outfit photo. Output ONE JSON object (no markdown, no commentary) with exactly this structure:
 {
   "oneLiner": string,
   "colorPalette": [{"name": string, "colorCode": "#RRGGBB", "percentage": number}],
@@ -68,7 +69,9 @@ ${ONE_LINER_EXAMPLES.map((e) => `  - ${e}`).join("\n")}
 - 例（参考スタイル）:
 ${DESCRIPTION_EXAMPLES.map((e) => e).join("\n\n---\n\n")}
 
-# styles — 既存軸（ストリート / アメカジ / モード / 古着 / フェミニン etc.）を JP 表記。percentages should sum to ~100。
+# styles — **以下のカタログから 1〜3 個を選んで JP 表記で返す。新しいスタイル名を作らない**。複数該当する場合は最も支配的なものから順に並べ、percentages should sum to ~100。
+カタログ（これら以外は出力禁止）:
+${STYLE_CATALOG.map((s) => `  - ${s}`).join("\n")}
 
 # radarScores — 6 軸を 0〜100 整数で評価
 - casual:    カジュアルさ（ラフ / リラックス / 普段着寄り）
