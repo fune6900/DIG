@@ -13,6 +13,7 @@ import {
 import { ImageIcon, SparkleIcon } from "@/components/ui/icons";
 import { Spinner } from "@/components/ui/Spinner";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { compressImage } from "@/lib/image-compress";
 import type { OotdAnalysisResult } from "@/types/ootd";
 
 type Step = "upload" | "analysis" | "register";
@@ -111,9 +112,11 @@ export function OotdNewPageClient() {
     setIsPreparingFile(true);
 
     try {
-      const prepared = HEIC_TYPES.has(file.type.toLowerCase())
+      const heicConverted = HEIC_TYPES.has(file.type.toLowerCase())
         ? await convertHeicToJpegViaServer(file)
         : file;
+      // /api/ootd/analyze は Vercel の 4.5MB body limit を持つため、送信前に圧縮する。
+      const prepared = await compressImage(heicConverted);
       // 古い preview を捨てて新しい ObjectURL を作る。
       // useEffect の cleanup で前回 URL が revoke される。
       setPreviewUrl(URL.createObjectURL(prepared));
