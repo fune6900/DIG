@@ -1,7 +1,9 @@
 import {
   normalizeColorCode,
   normalizeAnalysisResult,
+  SYSTEM_PROMPT,
 } from "@/services/ai-analysis";
+import { STYLE_CATALOG } from "@/lib/style-catalog";
 
 describe("normalizeColorCode", () => {
   it("3桁 hex #1aF を #11AAFF に展開・大文字化する", () => {
@@ -82,9 +84,9 @@ describe("normalizeAnalysisResult", () => {
       colorPalette: unknown[];
     };
     expect(result.colorPalette[0]).toBe("not-an-object");
-    expect(
-      (result.colorPalette[1] as { colorCode: string }).colorCode,
-    ).toBe("#AABBCC");
+    expect((result.colorPalette[1] as { colorCode: string }).colorCode).toBe(
+      "#AABBCC",
+    );
   });
 
   it("colorCode が文字列でない要素はスキップして値を保持する", () => {
@@ -95,5 +97,19 @@ describe("normalizeAnalysisResult", () => {
       colorPalette: { colorCode: unknown }[];
     };
     expect(result.colorPalette[0].colorCode).toBe(12345);
+  });
+});
+
+describe("SYSTEM_PROMPT", () => {
+  it("STYLE_CATALOG の全スタイル名を含む（プロンプトに埋め込まれている）", () => {
+    for (const name of STYLE_CATALOG) {
+      expect(SYSTEM_PROMPT).toContain(name);
+    }
+  });
+
+  it("カタログ外のスタイルを作らないよう AI に明示している", () => {
+    expect(SYSTEM_PROMPT).toMatch(
+      /カタログ|以下のリスト|新しいスタイル名を作らない|これら以外/,
+    );
   });
 });
