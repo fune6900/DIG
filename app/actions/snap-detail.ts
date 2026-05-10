@@ -88,7 +88,9 @@ export async function analyzeSnapAction(
       analyzedAt: new Date(),
     });
     return { data: updatedSnap as SnapDetail, error: null };
-  } catch {
+  } catch (error) {
+    // 本番環境のデバッグのためサーバーログに残す（レスポンスには内部情報を含めない）
+    console.error("[analyzeSnapAction]", { snapId: parsed.data, error });
     return {
       data: null,
       error: { message: "AI analysis failed", code: "ANALYSIS_FAILED" },

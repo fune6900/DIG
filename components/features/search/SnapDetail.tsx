@@ -100,14 +100,31 @@ export function SnapDetail({ snap }: SnapDetailProps) {
 
   // ダウンロード
   async function handleDownload() {
-    const response = await fetch(currentSnap.imageUrl);
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `snap-${currentSnap.id}.jpg`;
-    a.click();
-    URL.revokeObjectURL(url);
+    let objectUrl: string | null = null;
+    try {
+      // クライアント側でも HTTPS 制限を入れて、DB の imageUrl が改竄された
+      // 場合に任意プロトコルへ誘導されないようにする（SSRF 緩和）。
+      const parsed = new URL(currentSnap.imageUrl);
+      if (parsed.protocol !== "https:") {
+        throw new Error(`Disallowed protocol: ${parsed.protocol}`);
+      }
+
+      const response = await fetch(currentSnap.imageUrl);
+      if (!response.ok) {
+        throw new Error(`Fetch failed: ${response.status}`);
+      }
+      const blob = await response.blob();
+      objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = `snap-${currentSnap.id}.jpg`;
+      a.click();
+    } catch (error) {
+      console.error("[SnapDetail.handleDownload]", error);
+      alert("画像のダウンロードに失敗しました");
+    } finally {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    }
   }
 
   const isAnalyzed = currentSnap.analyzedAt !== null;

@@ -1,14 +1,5 @@
 import type { NextConfig } from "next";
-
-function resolveSupabaseHost(): string | null {
-  const url = process.env.SUPABASE_URL;
-  if (!url) return null;
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return null;
-  }
-}
+import { resolveSupabaseHost } from "./lib/image-hosts";
 
 const supabaseHost = resolveSupabaseHost();
 

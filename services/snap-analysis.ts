@@ -1,31 +1,12 @@
 import { analyzeOutfit } from "@/services/ai-analysis";
+import { assertAllowedImageUrl } from "@/lib/image-hosts";
 import type { OotdAnalysisResult } from "@/types/ootd";
-
-// SSRF 対策: server-side fetch を許可する画像ホストの allow-list。
-// next.config.ts の images.remotePatterns と同期させること。
-// 内部 IP / file:// / 任意ホストへの踏み台化を防ぐ。
-const ALLOWED_IMAGE_HOSTS = new Set<string>(["images.unsplash.com"]);
-
-function assertAllowedImageUrl(rawUrl: string): URL {
-  let url: URL;
-  try {
-    url = new URL(rawUrl);
-  } catch {
-    throw new Error(`Invalid image URL: ${rawUrl}`);
-  }
-
-  if (url.protocol !== "https:") {
-    throw new Error(`Disallowed protocol: ${url.protocol}`);
-  }
-  if (!ALLOWED_IMAGE_HOSTS.has(url.hostname)) {
-    throw new Error(`Disallowed image host: ${url.hostname}`);
-  }
-  return url;
-}
 
 export async function analyzeSnapImage(
   imageUrl: string,
 ): Promise<OotdAnalysisResult> {
+  // SSRF 対策: lib/image-hosts.ts で next.config.ts と同期した allow-list
+  // （images.unsplash.com + 必要なら SUPABASE_URL のホスト）に限定。
   const safeUrl = assertAllowedImageUrl(imageUrl);
 
   const response = await fetch(safeUrl.toString(), {

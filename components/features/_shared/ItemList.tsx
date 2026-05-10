@@ -12,8 +12,10 @@ export function ItemList({ items }: ItemListProps) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      {items.map((item) => (
-        <Badge key={item.name} variant="outline">
+      {items.map((item, index) => (
+        // DetectedItem には id が無く、AI 解析結果として同名アイテムが
+        // 重複し得るため index を組み合わせて key を一意化する。
+        <Badge key={`${item.name}-${index}`} variant="outline">
           {item.name}
         </Badge>
       ))}
