@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  ColorPaletteItemSchema,
+  StyleItemSchema,
+  DetectedItemSchema,
+  EvaluationRadarSchema,
+} from "@/types/ootd";
 
 export const SnapSchema = z.object({
   id: z.string().uuid(),
@@ -49,3 +55,23 @@ export const SnapSearchResultSchema = z.object({
   page: z.number().int().min(1),
 });
 export type SnapSearchResult = z.infer<typeof SnapSearchResultSchema>;
+
+// SnapSchema の AI 解析フィールドを z.unknown() から具体型に置き換えた詳細ビュー用スキーマ。
+// services/snap-analysis.ts の解析結果を格納し、/search/[id] 画面で使用する。
+export const SnapDetailSchema = SnapSchema.extend({
+  colorPalette: z.array(ColorPaletteItemSchema).nullable(),
+  styles: z.array(StyleItemSchema).nullable(),
+  detectedItems: z.array(DetectedItemSchema).nullable(),
+  radarScores: EvaluationRadarSchema.nullable(),
+});
+export type SnapDetail = z.infer<typeof SnapDetailSchema>;
+
+// 類似コーデ取得 Server Action / Service 関数の入力スキーマ。
+// searchQueries の hasSome で OR 検索し、snapId 自身を除外する。
+export const FindSimilarSnapsInputSchema = z.object({
+  snapId: z.string().uuid(),
+  searchQueries: z.array(z.string()),
+  page: z.number().int().min(1).default(1),
+  pageSize: z.number().int().min(1).max(30).default(10),
+});
+export type FindSimilarSnapsInput = z.infer<typeof FindSimilarSnapsInputSchema>;

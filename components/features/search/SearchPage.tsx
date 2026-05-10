@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useInfiniteSnapSearch } from "@/hooks/useInfiniteSnapSearch";
 import { SearchInput } from "./SearchInput";
 import { ConditionsLink } from "./ConditionsLink";
@@ -9,7 +10,14 @@ import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 import type { SnapSummary } from "@/types/snap";
 
 export function SearchPage() {
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [query, setQuery] = useState(searchParams.get("query") ?? "");
+
+  function handleSearch(q: string) {
+    setQuery(q);
+    router.push(`/search?query=${encodeURIComponent(q)}`);
+  }
 
   const { data, hasNextPage, isFetchingNextPage, isPending, fetchNextPage } =
     useInfiniteSnapSearch(query);
@@ -24,7 +32,7 @@ export function SearchPage() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <div className="mb-4 space-y-3">
-        <SearchInput onSearch={setQuery} initialQuery={query} />
+        <SearchInput onSearch={handleSearch} initialQuery={query} />
         <ConditionsLink />
       </div>
 

@@ -1,22 +1,3 @@
-import { Badge } from "@/components/ui/Badge";
-import type { DetectedItem } from "@/types/ootd";
-
-interface OotdItemListProps {
-  items: DetectedItem[];
-}
-
-export function OotdItemList({ items }: OotdItemListProps) {
-  if (items.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      {items.map((item) => (
-        <Badge key={item.name} variant="outline">
-          {item.name}
-        </Badge>
-      ))}
-    </div>
-  );
-}
+// components/features/_shared/ItemList.tsx に移管。
+// OOTD 専用名 (OotdItemList) を維持するため re-export ラッパとして残す。
+export { ItemList as OotdItemList } from "@/components/features/_shared/ItemList";
