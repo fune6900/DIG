@@ -104,4 +104,13 @@ describe("OotdDetail", () => {
       "123e4567-e89b-12d3-a456-426614174000",
     );
   });
+
+  it("編集リンクが /ootd/{id}/edit を指す", () => {
+    render(<OotdDetail ootd={mockOotd} onDelete={vi.fn()} />);
+    const editLink = screen.getByRole("link", { name: "編集" });
+    expect(editLink).toHaveAttribute(
+      "href",
+      "/ootd/123e4567-e89b-12d3-a456-426614174000/edit",
+    );
+  });
 });

@@ -6,6 +6,7 @@ import {
   DetectedItemSchema,
   EvaluationRadarSchema,
   CreateOotdInput,
+  UpdateOotdInput,
 } from "@/types/ootd";
 import type { Ootd, SortOrder } from "@/types/ootd";
 import { Prisma } from "@prisma/client";
@@ -95,6 +96,20 @@ export async function createOotd(
       radarScores: input.radarScores ?? Prisma.JsonNull,
       tags: input.tags,
       ...(input.date !== undefined ? { date: input.date } : {}),
+    },
+  });
+  return parseOotdRecord(record);
+}
+
+export async function updateOotd(
+  id: string,
+  input: UpdateOotdInput,
+): Promise<Ootd> {
+  const record = await prisma.ootd.update({
+    where: { id },
+    data: {
+      date: input.date,
+      tags: input.tags,
     },
   });
   return parseOotdRecord(record);

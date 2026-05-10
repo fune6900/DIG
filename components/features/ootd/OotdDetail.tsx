@@ -3,12 +3,18 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
+import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { OotdColorPalette } from "@/components/features/ootd/OotdColorPalette";
 import { OotdStyleGauge } from "@/components/features/ootd/OotdStyleGauge";
 import { OotdItemList } from "@/components/features/ootd/OotdItemList";
 import { OotdEvaluationRadar } from "@/components/features/ootd/OotdEvaluationRadar";
-import { ChevronLeftIcon, CloseIcon, TrashIcon } from "@/components/ui/icons";
+import {
+  ChevronLeftIcon,
+  CloseIcon,
+  PencilIcon,
+  TrashIcon,
+} from "@/components/ui/icons";
 import type { Ootd } from "@/types/ootd";
 
 interface OotdDetailProps {
@@ -61,12 +67,33 @@ export function OotdDetail({ ootd, onDelete, onBack }: OotdDetailProps) {
           <h1 className="font-display text-3xl tracking-widest text-denim-dark dark:text-offwhite leading-tight">
             {ootd.oneLiner}
           </h1>
-          <time
-            dateTime={ootd.date.toISOString()}
-            className="block text-sm text-denim/50 dark:text-offwhite/40"
-          >
-            {formattedDate}
-          </time>
+          <div className="flex items-center justify-between gap-3">
+            <time
+              dateTime={ootd.date.toISOString()}
+              className="block text-sm text-denim/50 dark:text-offwhite/40"
+            >
+              {formattedDate}
+            </time>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/ootd/${ootd.id}/edit`}
+                aria-label="編集"
+                className="inline-flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-xs font-medium text-denim/70 dark:text-offwhite/60 border border-denim/20 dark:border-offwhite/20 hover:bg-denim/5 dark:hover:bg-offwhite/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
+              >
+                <PencilIcon width={12} height={12} />
+                編集
+              </Link>
+              <button
+                type="button"
+                onClick={() => setShowConfirm(true)}
+                aria-label="削除"
+                className="inline-flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-xs font-medium text-rust dark:text-rust-light border border-rust/30 dark:border-rust-light/30 hover:bg-rust/5 dark:hover:bg-rust-light/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rust focus-visible:ring-offset-2"
+              >
+                <TrashIcon width={12} height={12} />
+                削除
+              </button>
+            </div>
+          </div>
           {ootd.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {ootd.tags.map((tag) => (
@@ -129,18 +156,6 @@ export function OotdDetail({ ootd, onDelete, onBack }: OotdDetailProps) {
             <OotdEvaluationRadar scores={ootd.radarScores} />
           </section>
         )}
-
-        <div className="pt-4 border-t border-denim/10 dark:border-offwhite/10">
-          <button
-            type="button"
-            onClick={() => setShowConfirm(true)}
-            aria-label="削除"
-            className="inline-flex items-center gap-1.5 rounded-sm px-4 py-2 text-sm font-medium text-rust dark:text-rust-light border border-rust/30 dark:border-rust-light/30 hover:bg-rust/5 dark:hover:bg-rust-light/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rust focus-visible:ring-offset-2"
-          >
-            <TrashIcon width={14} height={14} />
-            削除
-          </button>
-        </div>
       </article>
 
       {showConfirm &&

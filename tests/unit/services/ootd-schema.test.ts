@@ -5,6 +5,7 @@ import {
   DetectedItemSchema,
   CreateOotdInputSchema,
   EvaluationRadarSchema,
+  UpdateOotdInputSchema,
 } from "@/types/ootd";
 
 // ---------------------------------------------------------------------------
@@ -404,5 +405,60 @@ describe("CreateOotdInputSchema", () => {
       expect((result.data as Record<string, unknown>)["id"]).toBeUndefined();
     }
     // strict モードで fail する場合も可（設計次第）
+  });
+});
+
+// ---------------------------------------------------------------------------
+// UpdateOotdInputSchema
+// ---------------------------------------------------------------------------
+describe("UpdateOotdInputSchema", () => {
+  const validUpdate = {
+    date: new Date("2026-05-12"),
+    tags: ["古着", "デニム"],
+  };
+
+  it("正常値（date + tags）でパースできる", () => {
+    const result = UpdateOotdInputSchema.safeParse(validUpdate);
+    expect(result.success).toBe(true);
+  });
+
+  it("date が Date 型でなければバリデーションエラーになる", () => {
+    const result = UpdateOotdInputSchema.safeParse({
+      ...validUpdate,
+      date: "2026-05-12",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("tags が空配列でパースできる", () => {
+    const result = UpdateOotdInputSchema.safeParse({
+      ...validUpdate,
+      tags: [],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("tags が 3 つでパースできる（上限境界値）", () => {
+    const result = UpdateOotdInputSchema.safeParse({
+      ...validUpdate,
+      tags: ["古着", "デニム", "90s"],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("tags が 4 つでバリデーションエラーになる（上限超過）", () => {
+    const result = UpdateOotdInputSchema.safeParse({
+      ...validUpdate,
+      tags: ["古着", "デニム", "90s", "アメカジ"],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("tags の要素が空文字でバリデーションエラーになる", () => {
+    const result = UpdateOotdInputSchema.safeParse({
+      ...validUpdate,
+      tags: [""],
+    });
+    expect(result.success).toBe(false);
   });
 });

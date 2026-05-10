@@ -1,15 +1,21 @@
 "use server";
 
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 import {
   findOotds,
   findOotdById,
   createOotd,
   deleteOotd,
+  updateOotd,
 } from "@/services/ootd-service";
 import { prisma } from "@/lib/prisma";
 import { deleteImage } from "@/lib/storage";
-import { CreateOotdInputSchema, SortOrderSchema } from "@/types/ootd";
+import {
+  CreateOotdInputSchema,
+  SortOrderSchema,
+  UpdateOotdInputSchema,
+} from "@/types/ootd";
 import type { Ootd } from "@/types/ootd";
 
 type ActionResult<T> =
@@ -82,6 +88,38 @@ export async function createOotdAction(
     return { data: result, error: null };
   } catch (error) {
     console.error("[createOotdAction]", error);
+    return {
+      data: null,
+      error: { message: "Internal server error", code: "INTERNAL_ERROR" },
+    };
+  }
+}
+
+export async function updateOotdAction(
+  id: unknown,
+  input: unknown,
+): Promise<ActionResult<Ootd>> {
+  const idParsed = z.string().uuid().safeParse(id);
+  if (!idParsed.success) {
+    return {
+      data: null,
+      error: { message: "Invalid ID", code: "VALIDATION_ERROR" },
+    };
+  }
+  const inputParsed = UpdateOotdInputSchema.safeParse(input);
+  if (!inputParsed.success) {
+    return {
+      data: null,
+      error: { message: "Invalid input", code: "VALIDATION_ERROR" },
+    };
+  }
+  try {
+    const result = await updateOotd(idParsed.data, inputParsed.data);
+    revalidatePath("/ootd");
+    revalidatePath(`/ootd/${idParsed.data}`);
+    return { data: result, error: null };
+  } catch (error) {
+    console.error("[updateOotdAction]", error);
     return {
       data: null,
       error: { message: "Internal server error", code: "INTERNAL_ERROR" },
