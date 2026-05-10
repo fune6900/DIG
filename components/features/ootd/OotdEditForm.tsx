@@ -13,17 +13,19 @@ interface OotdEditFormProps {
 }
 
 const MAX_TAGS = 3;
-const DATE_PATTERN = /^(\d{4})\/(\d{2})\/(\d{2})$/;
+// `<input type="date">` の value は ISO 8601 ローカル日付 (YYYY-MM-DD)。
+// JS の Date とのやり取りはローカルタイムで行い UTC ずれを避ける。
+const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 export function formatDateInput(date: Date): string {
   const y = date.getFullYear().toString().padStart(4, "0");
   const m = (date.getMonth() + 1).toString().padStart(2, "0");
   const d = date.getDate().toString().padStart(2, "0");
-  return `${y}/${m}/${d}`;
+  return `${y}-${m}-${d}`;
 }
 
 export function parseDateInput(value: string): Date | null {
-  const match = DATE_PATTERN.exec(value.trim());
+  const match = ISO_DATE_PATTERN.exec(value.trim());
   if (!match) return null;
   const y = Number(match[1]);
   const m = Number(match[2]);
@@ -74,7 +76,7 @@ export function OotdEditForm({
     e.preventDefault();
     const parsed = parseDateInput(dateValue);
     if (!parsed) {
-      setDateError("YYYY/MM/DD 形式で入力してください");
+      setDateError("有効な日付を選択してください");
       return;
     }
     setDateError(null);
@@ -92,12 +94,9 @@ export function OotdEditForm({
         </label>
         <input
           id="ootd-edit-date"
-          type="text"
-          inputMode="numeric"
+          type="date"
           value={dateValue}
           onChange={(e) => setDateValue(e.target.value)}
-          placeholder="2026/05/12"
-          maxLength={10}
           aria-invalid={dateError !== null}
           aria-describedby={dateError ? "ootd-edit-date-error" : undefined}
           className="w-full rounded-sm border border-denim/15 bg-offwhite dark:bg-canvas-subtle px-3 py-2 text-sm text-denim-dark dark:text-offwhite focus:outline-none focus:ring-2 focus:ring-denim focus:ring-offset-1"

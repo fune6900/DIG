@@ -1,8 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { OotdEditForm } from "@/components/features/ootd/OotdEditForm";
 import type { Ootd } from "@/types/ootd";
 
+// 日付は local-time コンストラクタで作成。TZ ずれを避けるため。
 const mockOotd: Ootd = {
   id: "123e4567-e89b-12d3-a456-426614174000",
   imageUrl: "https://example.com/ootd.jpg",
@@ -11,14 +12,14 @@ const mockOotd: Ootd = {
   styles: [],
   description: "test",
   detectedItems: [],
-  date: new Date("2026-05-12T00:00:00Z"),
+  date: new Date(2026, 4, 12),
   tags: ["古着", "デニム"],
-  createdAt: new Date("2026-05-12T10:00:00Z"),
-  updatedAt: new Date("2026-05-12T10:00:00Z"),
+  createdAt: new Date(2026, 4, 12, 10),
+  updatedAt: new Date(2026, 4, 12, 10),
 };
 
 describe("OotdEditForm", () => {
-  it("初期表示で日付が YYYY/MM/DD 形式で表示される", () => {
+  it("初期表示で日付が ISO 形式 (YYYY-MM-DD) で input に入る", () => {
     render(
       <OotdEditForm
         ootd={mockOotd}
@@ -28,7 +29,8 @@ describe("OotdEditForm", () => {
       />,
     );
     const dateInput = screen.getByLabelText(/投稿年月日/) as HTMLInputElement;
-    expect(dateInput.value).toBe("2026/05/12");
+    expect(dateInput.type).toBe("date");
+    expect(dateInput.value).toBe("2026-05-12");
   });
 
   it("初期表示でタグが # なしで表示される", () => {
@@ -63,7 +65,7 @@ describe("OotdEditForm", () => {
     expect(arg.tags).toEqual(["古着", "デニム"]);
   });
 
-  it("日付を変更して保存すると新しい Date が onSubmit に渡る", async () => {
+  it("カレンダーで日付を変更して保存すると新しい Date が onSubmit に渡る", async () => {
     const onSubmit = vi.fn();
     render(
       <OotdEditForm
@@ -74,8 +76,7 @@ describe("OotdEditForm", () => {
       />,
     );
     const dateInput = screen.getByLabelText(/投稿年月日/);
-    await userEvent.clear(dateInput);
-    await userEvent.type(dateInput, "2026/06/01");
+    fireEvent.change(dateInput, { target: { value: "2026-06-01" } });
     await userEvent.click(screen.getByRole("button", { name: /保存/ }));
     const arg = onSubmit.mock.calls[0][0];
     expect(arg.date.getFullYear()).toBe(2026);
@@ -83,7 +84,7 @@ describe("OotdEditForm", () => {
     expect(arg.date.getDate()).toBe(1);
   });
 
-  it("不正な日付形式ではエラーが表示され onSubmit が呼ばれない", async () => {
+  it("日付が空のまま保存するとエラーが表示され onSubmit が呼ばれない", async () => {
     const onSubmit = vi.fn();
     render(
       <OotdEditForm
@@ -94,8 +95,7 @@ describe("OotdEditForm", () => {
       />,
     );
     const dateInput = screen.getByLabelText(/投稿年月日/);
-    await userEvent.clear(dateInput);
-    await userEvent.type(dateInput, "not-a-date");
+    fireEvent.change(dateInput, { target: { value: "" } });
     await userEvent.click(screen.getByRole("button", { name: /保存/ }));
     expect(onSubmit).not.toHaveBeenCalled();
     expect(screen.getByRole("alert")).toBeInTheDocument();
