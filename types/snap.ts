@@ -11,7 +11,9 @@ export const SnapSchema = z.object({
   title: z.string().nullable(),
   description: z.string().nullable(),
   tags: z.array(z.string()),
-  searchQuery: z.string(),
+  // 同一画像が複数キーワードでヒットした履歴を全て保持する。
+  // findSnapsByQuery は `{ has: query }` で配列内に当該キーワードがあるか判定する。
+  searchQueries: z.array(z.string()),
   oneLiner: z.string().nullable(),
   colorPalette: z.unknown().nullable(),
   styles: z.unknown().nullable(),

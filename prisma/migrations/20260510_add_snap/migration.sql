@@ -10,7 +10,7 @@ CREATE TABLE "Snap" (
     "title" TEXT,
     "description" TEXT,
     "tags" TEXT[],
-    "searchQuery" TEXT NOT NULL,
+    "searchQueries" TEXT[],
     "oneLiner" TEXT,
     "colorPalette" JSONB,
     "styles" JSONB,
@@ -25,7 +25,7 @@ CREATE TABLE "Snap" (
 );
 
 -- CreateIndex
-CREATE INDEX "Snap_searchQuery_idx" ON "Snap"("searchQuery");
+CREATE INDEX "Snap_searchQueries_idx" ON "Snap" USING GIN ("searchQueries");
 
 -- CreateIndex
 CREATE INDEX "Snap_createdAt_idx" ON "Snap"("createdAt");

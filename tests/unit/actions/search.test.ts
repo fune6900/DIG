@@ -57,7 +57,9 @@ const VALID_INPUT = { query: "denim jacket", page: 1, pageSize: 30 };
 // セットアップ
 // ---------------------------------------------------------------------------
 beforeEach(() => {
-  vi.clearAllMocks();
+  // resetAllMocks は mockResolvedValueOnce のキューも全クリアする。
+  // clearAllMocks だと未消費のキューが次のテストにリークするので使わない。
+  vi.resetAllMocks();
 });
 
 // ---------------------------------------------------------------------------
@@ -188,6 +190,18 @@ describe("searchSnapsAction — キャッシュ十分（Unsplash 非呼び出し
     });
   });
 
+  it("page=2 で DB が 0 件のとき Unsplash を呼ばない（末尾と判断・無限ループ防止）", async () => {
+    findSnapsByQueryMock.mockResolvedValue([]);
+
+    const result = await searchSnapsAction({ ...VALID_INPUT, page: 2 });
+
+    expect(searchUnsplashPhotosMock).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      data: { items: [], hasMore: false, page: 2 },
+      error: null,
+    });
+  });
+
   it("page=2 で DB が pageSize 件以上返したとき Unsplash を呼ばない", async () => {
     const snaps = Array.from({ length: 30 }, (_, i) =>
       makeSnapSummary(`snap-${i}`),
@@ -258,14 +272,20 @@ describe("searchSnapsAction — キャッシュ不足（Unsplash 呼び出し）
     );
   });
 
-  it("hasMore は totalPages > page で計算される", async () => {
-    findSnapsByQueryMock.mockResolvedValueOnce([]);
+  it("hasMore は totalPages > page で計算される（page=2 で部分キャッシュあり）", async () => {
+    // page=2 で initialItems > 0 のため Unsplash 補完が走る
+    findSnapsByQueryMock.mockResolvedValueOnce([
+      makeSnapSummary("snap-cached"),
+    ]);
     searchUnsplashPhotosMock.mockResolvedValue({
       photos: [makeUnsplashPhoto("photo-1")],
       totalPages: 3,
     });
     upsertSnapsMock.mockResolvedValue(undefined);
-    findSnapsByQueryMock.mockResolvedValueOnce([makeSnapSummary("photo-1")]);
+    findSnapsByQueryMock.mockResolvedValueOnce([
+      makeSnapSummary("snap-cached"),
+      makeSnapSummary("photo-1"),
+    ]);
 
     const result = await searchSnapsAction({
       query: "M-65",
@@ -278,14 +298,20 @@ describe("searchSnapsAction — キャッシュ不足（Unsplash 呼び出し）
     });
   });
 
-  it("totalPages === page のとき hasMore は false", async () => {
-    findSnapsByQueryMock.mockResolvedValueOnce([]);
+  it("totalPages === page のとき hasMore は false（page=2 で部分キャッシュあり）", async () => {
+    // page=2 で initialItems > 0 のため Unsplash 補完が走る
+    findSnapsByQueryMock.mockResolvedValueOnce([
+      makeSnapSummary("snap-cached"),
+    ]);
     searchUnsplashPhotosMock.mockResolvedValue({
       photos: [makeUnsplashPhoto("photo-1")],
       totalPages: 2,
     });
     upsertSnapsMock.mockResolvedValue(undefined);
-    findSnapsByQueryMock.mockResolvedValueOnce([makeSnapSummary("photo-1")]);
+    findSnapsByQueryMock.mockResolvedValueOnce([
+      makeSnapSummary("snap-cached"),
+      makeSnapSummary("photo-1"),
+    ]);
 
     const result = await searchSnapsAction({
       query: "M-65",

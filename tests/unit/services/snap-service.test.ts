@@ -11,7 +11,8 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     snap: {
       findMany: vi.fn(),
-      upsert: vi.fn(),
+      createMany: vi.fn(),
+      update: vi.fn(),
     },
   },
 }));
@@ -27,7 +28,7 @@ const makeSnapRecord = (
   overrides: Partial<{
     id: string;
     externalId: string;
-    searchQuery: string;
+    searchQueries: string[];
     createdAt: Date;
   }> = {},
 ) => ({
@@ -41,7 +42,7 @@ const makeSnapRecord = (
   title: null,
   description: "A stylish outfit",
   tags: ["fashion", "outfit"],
-  searchQuery: overrides.searchQuery ?? "denim jacket",
+  searchQueries: overrides.searchQueries ?? ["denim jacket"],
   oneLiner: null,
   colorPalette: null,
   styles: null,
@@ -80,8 +81,7 @@ describe("findSnapsByQuery", () => {
   });
 
   it("page=1, pageSize=30 のとき skip=0, take=30 で DB を照会する", async () => {
-    const snap = makeSnapRecord();
-    vi.mocked(prisma.snap.findMany).mockResolvedValue([snap]);
+    vi.mocked(prisma.snap.findMany).mockResolvedValue([makeSnapRecord()]);
 
     await findSnapsByQuery({ query: "denim jacket", page: 1, pageSize: 30 });
 
@@ -119,22 +119,21 @@ describe("findSnapsByQuery", () => {
     );
   });
 
-  it("searchQuery で絞り込み、createdAt desc で並べる", async () => {
+  it("searchQueries に query が含まれるレコードを has で絞り込む", async () => {
     vi.mocked(prisma.snap.findMany).mockResolvedValue([]);
 
     await findSnapsByQuery({ query: "M-65", page: 1, pageSize: 30 });
 
     expect(prisma.snap.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { searchQuery: "M-65" },
+        where: { searchQueries: { has: "M-65" } },
         orderBy: { createdAt: "desc" },
       }),
     );
   });
 
   it("DB が返した配列をそのまま返す", async () => {
-    const snap = makeSnapRecord();
-    vi.mocked(prisma.snap.findMany).mockResolvedValue([snap]);
+    vi.mocked(prisma.snap.findMany).mockResolvedValue([makeSnapRecord()]);
 
     const result = await findSnapsByQuery({
       query: "denim jacket",
@@ -167,8 +166,18 @@ describe("upsertSnaps", () => {
     vi.clearAllMocks();
   });
 
-  it("写真配列の件数分だけ prisma.snap.upsert を呼ぶ", async () => {
-    vi.mocked(prisma.snap.upsert).mockResolvedValue(makeSnapRecord());
+  it("写真が 0 件のとき DB を一切叩かない", async () => {
+    await upsertSnaps([], "empty query");
+
+    expect(prisma.snap.findMany).not.toHaveBeenCalled();
+    expect(prisma.snap.createMany).not.toHaveBeenCalled();
+    expect(prisma.snap.update).not.toHaveBeenCalled();
+  });
+
+  it("全件新規のとき createMany 1 回で skipDuplicates=true を渡す", async () => {
+    // 既存チェック: 0 件
+    vi.mocked(prisma.snap.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.snap.createMany).mockResolvedValue({ count: 3 });
 
     const photos = [
       makeUnsplashPhoto({ id: "photo-1" }),
@@ -178,44 +187,78 @@ describe("upsertSnaps", () => {
 
     await upsertSnaps(photos, "denim jacket");
 
-    expect(prisma.snap.upsert).toHaveBeenCalledTimes(3);
-  });
-
-  it("upsert の where 条件は source + externalId の複合ユニークキーを使う", async () => {
-    vi.mocked(prisma.snap.upsert).mockResolvedValue(makeSnapRecord());
-
-    const photo = makeUnsplashPhoto({ id: "unsplash-photo-abc" });
-    await upsertSnaps([photo], "M-65");
-
-    expect(prisma.snap.upsert).toHaveBeenCalledWith(
+    expect(prisma.snap.createMany).toHaveBeenCalledTimes(1);
+    expect(prisma.snap.createMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: {
-          source_externalId: {
-            source: "unsplash",
-            externalId: "unsplash-photo-abc",
-          },
-        },
+        skipDuplicates: true,
+        data: expect.any(Array),
       }),
     );
+    expect(prisma.snap.update).not.toHaveBeenCalled();
   });
 
-  it("同一 source + externalId が既に存在しても upsert はエラーにならない（重複ガード）", async () => {
-    // upsert は create-or-update なので、重複があっても例外を投げない
-    vi.mocked(prisma.snap.upsert).mockResolvedValue(makeSnapRecord());
+  it("既存写真の searchQueries に query が未登録のとき update.push で追記する", async () => {
+    vi.mocked(prisma.snap.findMany).mockResolvedValue([
+      {
+        externalId: "photo-1",
+        searchQueries: ["denim jacket"],
+      },
+    ] as Awaited<ReturnType<typeof prisma.snap.findMany>>);
+    vi.mocked(prisma.snap.update).mockResolvedValue(makeSnapRecord());
 
-    const photo = makeUnsplashPhoto({ id: "duplicate-photo" });
+    await upsertSnaps([makeUnsplashPhoto({ id: "photo-1" })], "M-65");
 
-    // 1回目
-    await upsertSnaps([photo], "M-65");
-    // 2回目（同一 ID）
-    await upsertSnaps([photo], "M-65");
-
-    // 例外が発生しなかったことを確認
-    expect(prisma.snap.upsert).toHaveBeenCalledTimes(2);
+    expect(prisma.snap.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          source_externalId: { source: "unsplash", externalId: "photo-1" },
+        },
+        data: { searchQueries: { push: "M-65" } },
+      }),
+    );
+    // 既存のみなので createMany は呼ばれない
+    expect(prisma.snap.createMany).not.toHaveBeenCalled();
   });
 
-  it("create データに imageUrl / authorName / searchQuery / tags を正しく詰める", async () => {
-    vi.mocked(prisma.snap.upsert).mockResolvedValue(makeSnapRecord());
+  it("既存写真の searchQueries に query が既に登録済みのとき update を呼ばない（重複ガード）", async () => {
+    vi.mocked(prisma.snap.findMany).mockResolvedValue([
+      {
+        externalId: "photo-1",
+        searchQueries: ["denim jacket", "M-65"],
+      },
+    ] as Awaited<ReturnType<typeof prisma.snap.findMany>>);
+
+    await upsertSnaps([makeUnsplashPhoto({ id: "photo-1" })], "M-65");
+
+    expect(prisma.snap.update).not.toHaveBeenCalled();
+    expect(prisma.snap.createMany).not.toHaveBeenCalled();
+  });
+
+  it("新規と既存が混在するとき createMany と update を両方呼ぶ", async () => {
+    vi.mocked(prisma.snap.findMany).mockResolvedValue([
+      {
+        externalId: "existing-photo",
+        searchQueries: ["denim"],
+      },
+    ] as Awaited<ReturnType<typeof prisma.snap.findMany>>);
+    vi.mocked(prisma.snap.createMany).mockResolvedValue({ count: 1 });
+    vi.mocked(prisma.snap.update).mockResolvedValue(makeSnapRecord());
+
+    await upsertSnaps(
+      [
+        makeUnsplashPhoto({ id: "new-photo" }),
+        makeUnsplashPhoto({ id: "existing-photo" }),
+      ],
+      "M-65",
+    );
+
+    expect(prisma.snap.createMany).toHaveBeenCalledTimes(1);
+    expect(prisma.snap.update).toHaveBeenCalledTimes(1);
+  });
+
+  it("createMany の data に imageUrl / authorName / searchQueries / tags を正しく詰める", async () => {
+    vi.mocked(prisma.snap.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.snap.createMany).mockResolvedValue({ count: 1 });
 
     const photo = makeUnsplashPhoto({
       id: "photo-x",
@@ -234,22 +277,34 @@ describe("upsertSnaps", () => {
 
     await upsertSnaps([photo], "vintage jacket");
 
-    const callArgs = vi.mocked(prisma.snap.upsert).mock.calls[0]![0];
-    expect(callArgs.create).toMatchObject({
+    const callArgs = vi.mocked(prisma.snap.createMany).mock.calls[0]?.[0];
+    if (!callArgs) throw new Error("createMany was not called");
+    const firstRow = callArgs.data as Array<Record<string, unknown>>;
+    expect(firstRow[0]).toMatchObject({
       source: "unsplash",
       externalId: "photo-x",
       imageUrl: "https://images.unsplash.com/photo-x/regular",
       authorName: "Jane Smith",
       authorUrl: "https://unsplash.com/@janesmith",
       sourceUrl: "https://unsplash.com/photos/photo-x",
-      searchQuery: "vintage jacket",
+      searchQueries: ["vintage jacket"],
       tags: ["vintage", "jacket"],
     });
   });
 
-  it("写真が 0 件のとき upsert を呼ばない", async () => {
-    await upsertSnaps([], "empty query");
+  it("source + externalId で既存判定を行う（複合ユニークキー）", async () => {
+    vi.mocked(prisma.snap.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.snap.createMany).mockResolvedValue({ count: 1 });
 
-    expect(prisma.snap.upsert).not.toHaveBeenCalled();
+    await upsertSnaps([makeUnsplashPhoto({ id: "photo-abc" })], "M-65");
+
+    expect(prisma.snap.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          source: "unsplash",
+          externalId: { in: ["photo-abc"] },
+        },
+      }),
+    );
   });
 });

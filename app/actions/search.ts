@@ -28,9 +28,14 @@ export async function searchSnapsAction(input: unknown): Promise<
 
   const initialItems = await findSnapsByQuery({ query, page, pageSize });
 
-  // キャッシュ不足時は要求 page を Unsplash から補完する。page=1 に限定すると
-  // 2ページ目以降が空で打ち止めになるため、全ページで補完を試みる。
-  if (initialItems.length < pageSize) {
+  // キャッシュ不足時は要求 page を Unsplash から補完する。
+  // ただし page>1 で DB に 1 件もキャッシュが無い場合は「末尾を超えた」と
+  // 判断して Unsplash を呼ばない（無駄な API コール・無限ループ防止）。
+  // page=1 で 0 件 のときは Unsplash で初回フェッチが必要なので補完する。
+  const shouldFetchFromApi =
+    initialItems.length < pageSize && (page === 1 || initialItems.length > 0);
+
+  if (shouldFetchFromApi) {
     let items = initialItems;
     let totalPages = 0;
     let fetchedFromApi = false;

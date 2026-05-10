@@ -35,7 +35,7 @@ model Snap {
   title         String?
   description   String?
   tags          String[]
-  searchQuery   String
+  searchQueries String[]
   oneLiner      String?
   colorPalette  Json?
   styles        Json?
@@ -47,6 +47,6 @@ model Snap {
   updatedAt     DateTime  @updatedAt
 
   @@unique([source, externalId])
-  @@index([searchQuery])
+  @@index([searchQueries], type: Gin)
   @@index([createdAt])
 }
