@@ -28,7 +28,9 @@ export async function searchSnapsAction(input: unknown): Promise<
 
   const initialItems = await findSnapsByQuery({ query, page, pageSize });
 
-  if (initialItems.length < pageSize && page === 1) {
+  // キャッシュ不足時は要求 page を Unsplash から補完する。page=1 に限定すると
+  // 2ページ目以降が空で打ち止めになるため、全ページで補完を試みる。
+  if (initialItems.length < pageSize) {
     let items = initialItems;
     let totalPages = 0;
     let fetchedFromApi = false;
@@ -36,7 +38,7 @@ export async function searchSnapsAction(input: unknown): Promise<
     try {
       const { photos, totalPages: tp } = await searchUnsplashPhotos({
         query,
-        page: 1,
+        page,
         perPage: pageSize,
       });
       totalPages = tp;
@@ -47,7 +49,9 @@ export async function searchSnapsAction(input: unknown): Promise<
       // Unsplash 失敗時は初回取得の items をそのまま使う
     }
 
-    const hasMore = fetchedFromApi ? totalPages > 1 : items.length === pageSize;
+    const hasMore = fetchedFromApi
+      ? totalPages > page
+      : items.length === pageSize;
 
     return {
       data: { items, hasMore, page },

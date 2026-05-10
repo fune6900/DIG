@@ -34,6 +34,7 @@ export async function searchUnsplashPhotos(params: {
   const url = `https://api.unsplash.com/search/photos?${searchParams.toString()}`;
 
   const response = await fetch(url, {
+    signal: AbortSignal.timeout(8000),
     headers: {
       Authorization: `Client-ID ${accessKey}`,
     },

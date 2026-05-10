@@ -48,7 +48,10 @@ export async function upsertSnaps(
           tags: photo.tags?.map((t) => t.title) ?? [],
           searchQuery: query,
         },
-        update: {},
+        // 既存レコードが別キーワードで再ヒットした場合、searchQuery を最新クエリで
+        // 上書きすることで `findSnapsByQuery({ where: { searchQuery: query } })`
+        // から欠落するのを防ぐ。多対多の履歴管理は PR2 以降で別テーブル化する。
+        update: { searchQuery: query },
       }),
     ),
   );

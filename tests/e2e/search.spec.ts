@@ -71,16 +71,20 @@ test.describe("Phase 2: キーワード検索フロー", () => {
     await input.fill("M-65");
     await page.getByRole("button", { name: /検索/ }).first().click();
 
-    // 検索後、ローディング状態 or 結果 or 空状態のいずれかが表示される
-    // （外部APIに依存するため厳密な結果数は検証しない）
+    // 検索後、結果領域（snap-grid）にカードが出るか、空状態メッセージが出る
+    // 常設リンク（ナビ等）を拾って偽陽性にならないよう testid で結果領域に限定する。
     await page.waitForLoadState("networkidle");
-    const hasContent =
-      (await page.getByRole("link").count()) > 0 ||
-      (await page
-        .getByText(/該当|見つかり/)
-        .isVisible()
-        .catch(() => false));
-    expect(hasContent).toBe(true);
+    const resultArea = page.getByTestId("snap-grid");
+    const hasResultCards =
+      (await resultArea
+        .getByTestId("snap-card")
+        .count()
+        .catch(() => 0)) > 0;
+    const hasEmptyState = await page
+      .getByText(/該当|見つかり/)
+      .isVisible()
+      .catch(() => false);
+    expect(hasResultCards || hasEmptyState).toBe(true);
   });
 
   test("空文字検索ではエラーで落ちずページが維持される", async ({ page }) => {
@@ -103,14 +107,12 @@ test.describe("Phase 3: TOPまで戻るボタン", () => {
     // 検証用にスクロール対象を生成（結果が無くてもページ全体スクロールできるよう本文を伸ばす）
     await page.evaluate(() => window.scrollTo(0, 800));
     const topBtn = page.getByRole("button", { name: /トップ|TOP|top/i });
-    // 結果が無くてもボタンが出る設計を確認
-    await topBtn.waitFor({ state: "visible", timeout: 3000 }).catch(() => {});
-    // ボタンが存在する場合のみ動作確認
-    if (await topBtn.isVisible().catch(() => false)) {
-      await topBtn.click();
-      const scrollY = await page.evaluate(() => window.scrollY);
-      expect(scrollY).toBe(0);
-    }
+    // 仕様「600px 以上で表示」を必須アサート化（条件付きスキップで偽陽性にしない）
+    await expect(topBtn).toBeVisible({ timeout: 3000 });
+    await topBtn.click();
+    await expect
+      .poll(async () => page.evaluate(() => window.scrollY))
+      .toBeLessThanOrEqual(5);
   });
 });
 

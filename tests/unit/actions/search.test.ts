@@ -114,14 +114,31 @@ describe("searchSnapsAction — 入力バリデーション", () => {
     });
   });
 
-  it("pageSize が 51 のとき VALIDATION_ERROR を返す（上限 50）", async () => {
+  it("pageSize が 31 のとき VALIDATION_ERROR を返す（Unsplash per_page 上限 30 に合わせる）", async () => {
     const result = await searchSnapsAction({
       query: "jacket",
       page: 1,
-      pageSize: 51,
+      pageSize: 31,
     });
 
     expect(result).toMatchObject({
+      data: null,
+      error: { code: "VALIDATION_ERROR" },
+    });
+  });
+
+  it("pageSize が 30 のとき VALIDATION_ERROR にならない（境界値）", async () => {
+    findSnapsByQueryMock.mockResolvedValue(
+      Array.from({ length: 30 }, (_, i) => makeSnapSummary(`snap-${i}`)),
+    );
+
+    const result = await searchSnapsAction({
+      query: "jacket",
+      page: 1,
+      pageSize: 30,
+    });
+
+    expect(result).not.toMatchObject({
       data: null,
       error: { code: "VALIDATION_ERROR" },
     });
@@ -171,9 +188,11 @@ describe("searchSnapsAction — キャッシュ十分（Unsplash 非呼び出し
     });
   });
 
-  it("page=2 のとき（DB 件数に関わらず）Unsplash を呼ばない", async () => {
-    // page=2 以降はキャッシュ補充を試みない仕様
-    findSnapsByQueryMock.mockResolvedValue([makeSnapSummary("snap-1")]);
+  it("page=2 で DB が pageSize 件以上返したとき Unsplash を呼ばない", async () => {
+    const snaps = Array.from({ length: 30 }, (_, i) =>
+      makeSnapSummary(`snap-${i}`),
+    );
+    findSnapsByQueryMock.mockResolvedValue(snaps);
 
     await searchSnapsAction({ ...VALID_INPUT, page: 2 });
 
@@ -184,7 +203,7 @@ describe("searchSnapsAction — キャッシュ十分（Unsplash 非呼び出し
 // ---------------------------------------------------------------------------
 // キャッシュミス（Unsplash 呼び出し + upsert + 再取得）
 // ---------------------------------------------------------------------------
-describe("searchSnapsAction — キャッシュ不足 + page=1（Unsplash 呼び出し）", () => {
+describe("searchSnapsAction — キャッシュ不足（Unsplash 呼び出し）", () => {
   it("DB が pageSize 未満のとき Unsplash を呼ぶ", async () => {
     // 最初の findSnapsByQuery（upsert 前）は 0 件
     findSnapsByQueryMock.mockResolvedValueOnce([]);
@@ -216,6 +235,67 @@ describe("searchSnapsAction — キャッシュ不足 + page=1（Unsplash 呼び
     await searchSnapsAction({ query: "M-65", page: 1, pageSize: 30 });
 
     expect(upsertSnapsMock).toHaveBeenCalledWith(photos, "M-65");
+  });
+
+  it("page=2 で DB が pageSize 未満のとき Unsplash を page=2 で呼ぶ（無限スクロール継続）", async () => {
+    findSnapsByQueryMock.mockResolvedValueOnce([
+      makeSnapSummary("snap-cached"),
+    ]);
+    searchUnsplashPhotosMock.mockResolvedValue({
+      photos: [makeUnsplashPhoto("photo-p2")],
+      totalPages: 5,
+    });
+    upsertSnapsMock.mockResolvedValue(undefined);
+    findSnapsByQueryMock.mockResolvedValueOnce([
+      makeSnapSummary("snap-cached"),
+      makeSnapSummary("photo-p2"),
+    ]);
+
+    await searchSnapsAction({ query: "M-65", page: 2, pageSize: 30 });
+
+    expect(searchUnsplashPhotosMock).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 2, perPage: 30 }),
+    );
+  });
+
+  it("hasMore は totalPages > page で計算される", async () => {
+    findSnapsByQueryMock.mockResolvedValueOnce([]);
+    searchUnsplashPhotosMock.mockResolvedValue({
+      photos: [makeUnsplashPhoto("photo-1")],
+      totalPages: 3,
+    });
+    upsertSnapsMock.mockResolvedValue(undefined);
+    findSnapsByQueryMock.mockResolvedValueOnce([makeSnapSummary("photo-1")]);
+
+    const result = await searchSnapsAction({
+      query: "M-65",
+      page: 2,
+      pageSize: 30,
+    });
+
+    expect(result).toMatchObject({
+      data: { hasMore: true, page: 2 },
+    });
+  });
+
+  it("totalPages === page のとき hasMore は false", async () => {
+    findSnapsByQueryMock.mockResolvedValueOnce([]);
+    searchUnsplashPhotosMock.mockResolvedValue({
+      photos: [makeUnsplashPhoto("photo-1")],
+      totalPages: 2,
+    });
+    upsertSnapsMock.mockResolvedValue(undefined);
+    findSnapsByQueryMock.mockResolvedValueOnce([makeSnapSummary("photo-1")]);
+
+    const result = await searchSnapsAction({
+      query: "M-65",
+      page: 2,
+      pageSize: 30,
+    });
+
+    expect(result).toMatchObject({
+      data: { hasMore: false },
+    });
   });
 
   it("upsert 後に再度 DB から取得して items を返す", async () => {

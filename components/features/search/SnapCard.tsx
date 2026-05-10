@@ -14,6 +14,7 @@ export function SnapCard({ snap }: SnapCardProps) {
   return (
     <Link
       href={`/search/${snap.id}`}
+      data-testid="snap-card"
       className="block aspect-[3/4] overflow-hidden bg-denim-dark/10 dark:bg-canvas-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
     >
       <div className="relative h-full w-full transition-opacity duration-200 hover:opacity-85">

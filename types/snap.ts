@@ -33,9 +33,11 @@ export const SnapSummarySchema = SnapSchema.pick({
 export type SnapSummary = z.infer<typeof SnapSummarySchema>;
 
 export const SnapSearchInputSchema = z.object({
-  query: z.string().min(1).max(200),
+  // trim を先に適用して "   " のような空白のみ入力を弾く（サーバー側ガード）
+  query: z.string().trim().min(1).max(200),
   page: z.number().int().min(1).default(1),
-  pageSize: z.number().int().min(1).max(50).default(30),
+  // Unsplash Search Photos API の per_page 上限が 30 のため合わせる
+  pageSize: z.number().int().min(1).max(30).default(30),
 });
 export type SnapSearchInput = z.infer<typeof SnapSearchInputSchema>;
 

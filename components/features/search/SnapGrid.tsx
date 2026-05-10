@@ -51,7 +51,7 @@ export function SnapGrid({
   }
 
   return (
-    <div>
+    <div data-testid="snap-grid">
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
         {snaps.map((snap) => (
           <SnapCard key={snap.id} snap={snap} />

@@ -31,6 +31,7 @@ export function SearchInput({ onSearch, initialQuery = "" }: SearchInputProps) {
         <input
           type="text"
           role="textbox"
+          aria-label="検索キーワード"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="キーワードを入力（例: M-65、デニムジャケット）"
