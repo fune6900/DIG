@@ -6,6 +6,18 @@
 
 ## リリースノート
 
+### v0.9.5 — 2026-05-10
+
+**OOTD アップロード時の 413（Request Entity Too Large）エラー修正**
+
+- iPhone HEIC を JPEG 変換した直後の高解像度画像が Vercel serverless function の body size 上限（4.5MB）を超え、`/api/ootd/analyze` のレスポンスを `Unexpected token 'R', "Request En"... is not valid JSON` で破壊していた問題を修正
+- `lib/image-compress.ts` を新規追加。クライアント側で `<canvas>` 経由で max edge 1920px / JPEG quality 0.85 / 上限 2MB に圧縮してから送信
+- 既に上限以下の JPEG はスキップして再エンコードによる劣化を回避
+- `OotdNewPageClient` の `handleFileChange` で HEIC 変換後に圧縮処理を挟み、AI 分析・Storage アップロードの両経路で圧縮済み画像を使用（転送量も副次削減）
+- 寸法計算・スキップ判定・圧縮実行・URL リソース解放までユニットテスト 11 ケースでカバー
+
+---
+
 ### v0.9.4 — 2026-05-08
 
 **OOTD 投稿フローの離脱対策と Storage アップロード遅延化**
