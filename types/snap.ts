@@ -97,3 +97,25 @@ export const FindSimilarSnapsInputSchema = z.object({
   pageSize: z.number().int().min(1).max(30).default(10),
 });
 export type FindSimilarSnapsInput = z.infer<typeof FindSimilarSnapsInputSchema>;
+
+// 画像検索 Server Action の入力。
+// imageUrl は SSRF allow-list 経由の HTTPS URL のみ許可する。
+// 厳密なホスト検証は Server Action 内の assertAllowedImageUrl で行うため、
+// ここでは URL 形式チェックのみ実施する。
+export const AnalyzeImageForSearchInputSchema = z.object({
+  imageUrl: z.string().url(),
+});
+export type AnalyzeImageForSearchInput = z.infer<
+  typeof AnalyzeImageForSearchInputSchema
+>;
+
+// 画像検索 Server Action の戻り値（成功時）。
+// styles は STYLE_CATALOG 内の文字列（AI が prompt に従って返す）。
+// colorCategories は 16 系統に正規化済み（categorizeColorPalette の結果）。
+export const AnalyzeImageForSearchResultSchema = z.object({
+  styles: z.array(z.string()),
+  colorCategories: z.array(ColorCategoryEnum),
+});
+export type AnalyzeImageForSearchResult = z.infer<
+  typeof AnalyzeImageForSearchResultSchema
+>;
