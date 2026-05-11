@@ -7,7 +7,9 @@ import {
 } from "@/types/ootd";
 import { COLOR_CATEGORIES } from "@/lib/color-catalog";
 
-// 16 系統のカラー系統を型安全に制限する enum
+// 16 系統のカラー系統を型安全に制限する enum。
+// 保存(Snap.colorCategories)・検索入力(SnapSearchInput.colorCategories) 双方で
+// 同じ enum を共有し、16 系統以外の値が DB / API 経由で混入するのを防ぐ。
 const ColorCategoryEnum = z.enum(COLOR_CATEGORIES);
 
 export const SnapSchema = z.object({
@@ -26,7 +28,8 @@ export const SnapSchema = z.object({
   searchQueries: z.array(z.string()),
   // AI 解析で算出したカラー系統（lib/color-catalog.ts の 16 系統）。
   // GIN インデックスで colorCategories フィルタ検索に使用する。
-  colorCategories: z.array(z.string()),
+  // 入力スキーマ(SnapSearchInputSchema.colorCategories) と同じ enum で揃える。
+  colorCategories: z.array(ColorCategoryEnum),
   oneLiner: z.string().nullable(),
   colorPalette: z.unknown().nullable(),
   styles: z.unknown().nullable(),
