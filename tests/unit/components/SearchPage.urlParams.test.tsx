@@ -9,7 +9,11 @@
 const useInfiniteSnapSearchMock = vi.fn();
 
 vi.mock("@/hooks/useInfiniteSnapSearch", () => ({
-  useInfiniteSnapSearch: (query: string) => useInfiniteSnapSearchMock(query),
+  useInfiniteSnapSearch: (params: {
+    query?: string;
+    styles?: string[];
+    colorCategories?: string[];
+  }) => useInfiniteSnapSearchMock(params),
 }));
 
 // useSearchParams をモックして ?query=hoge を差し込む
@@ -59,7 +63,7 @@ describe("SearchPage — ?query=hoge での訪問", () => {
     expect(input).toHaveValue("hoge");
   });
 
-  it("?query=hoge のとき useInfiniteSnapSearch が 'hoge' で呼ばれる（自動検索）", async () => {
+  it("?query=hoge のとき useInfiniteSnapSearch が { query: 'hoge' } で呼ばれる（自動検索）", async () => {
     mockSearchParams.get.mockImplementation((key: string) =>
       key === "query" ? "hoge" : null,
     );
@@ -67,7 +71,9 @@ describe("SearchPage — ?query=hoge での訪問", () => {
     render(<SearchPage />);
 
     await waitFor(() => {
-      expect(useInfiniteSnapSearchMock).toHaveBeenCalledWith("hoge");
+      expect(useInfiniteSnapSearchMock).toHaveBeenCalledWith(
+        expect.objectContaining({ query: "hoge" }),
+      );
     });
   });
 
@@ -82,7 +88,7 @@ describe("SearchPage — ?query=hoge での訪問", () => {
     expect(input).toHaveValue("M-65");
   });
 
-  it("?query=M-65 のとき useInfiniteSnapSearch が 'M-65' で呼ばれる", async () => {
+  it("?query=M-65 のとき useInfiniteSnapSearch が { query: 'M-65' } で呼ばれる", async () => {
     mockSearchParams.get.mockImplementation((key: string) =>
       key === "query" ? "M-65" : null,
     );
@@ -90,7 +96,9 @@ describe("SearchPage — ?query=hoge での訪問", () => {
     render(<SearchPage />);
 
     await waitFor(() => {
-      expect(useInfiniteSnapSearchMock).toHaveBeenCalledWith("M-65");
+      expect(useInfiniteSnapSearchMock).toHaveBeenCalledWith(
+        expect.objectContaining({ query: "M-65" }),
+      );
     });
   });
 });
@@ -108,13 +116,17 @@ describe("SearchPage — query パラメータなしでの訪問", () => {
     expect(input).toHaveValue("");
   });
 
-  it("query パラメータがないとき useInfiniteSnapSearch は空文字で呼ばれる", async () => {
+  it("query パラメータがないとき useInfiniteSnapSearch は query=undefined で呼ばれる", async () => {
+    // SearchPage は空文字を `query || undefined` で undefined に正規化して
+    // hook に渡す（SnapSearchInputSchema の refine が空文字を弾くため）。
     mockSearchParams.get.mockReturnValue(null);
 
     render(<SearchPage />);
 
     await waitFor(() => {
-      expect(useInfiniteSnapSearchMock).toHaveBeenCalledWith("");
+      expect(useInfiniteSnapSearchMock).toHaveBeenCalledWith(
+        expect.objectContaining({ query: undefined }),
+      );
     });
   });
 });

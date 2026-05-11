@@ -4,13 +4,46 @@ import type { Snap, SnapSummary } from "@/types/snap";
 import type { UnsplashPhoto } from "@/services/unsplash-service";
 
 export async function findSnapsByQuery(params: {
-  query: string;
+  query?: string;
+  styles?: string[];
+  colorCategories?: string[];
   page: number;
   pageSize: number;
 }): Promise<SnapSummary[]> {
-  const { query, page, pageSize } = params;
+  const { query, styles, colorCategories, page, pageSize } = params;
+
+  const hasQuery = Boolean(query);
+  const hasStyles = (styles?.length ?? 0) > 0;
+  const hasColors = (colorCategories?.length ?? 0) > 0;
+
+  if (!hasQuery && !hasStyles && !hasColors) {
+    return [];
+  }
+
+  const where: Prisma.SnapWhereInput = {};
+
+  if (hasQuery && query) {
+    where.searchQueries = { hasSome: [query] };
+  }
+
+  if (hasStyles && styles) {
+    where.styles = { hasSome: styles } as Prisma.SnapWhereInput["styles"];
+  }
+
+  if (hasColors && colorCategories) {
+    where.colorCategories = { hasSome: colorCategories };
+  }
+
+  // styles / colors フィルタが付くと AI 解析済み Snap のみを対象にする。
+  // 未解析 Snap は colorCategories / styles が空 or null のため自然に除外
+  // されることが多いが、PostgreSQL の JSON フィルタは null 列に対する
+  // hasSome 挙動が型に依存するため、明示的に analyzedAt で絞り込んでおく。
+  if (hasStyles || hasColors) {
+    where.analyzedAt = { not: null };
+  }
+
   const records = await prisma.snap.findMany({
-    where: { searchQueries: { has: query } },
+    where,
     orderBy: { createdAt: "desc" },
     skip: (page - 1) * pageSize,
     take: pageSize,
@@ -115,6 +148,7 @@ export async function upsertSnaps(
         description: photo.alt_description ?? photo.description,
         tags: photo.tags?.map((t) => t.title) ?? [],
         searchQueries: [query],
+        colorCategories: [],
       })),
       skipDuplicates: true,
     });
