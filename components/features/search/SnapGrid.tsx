@@ -42,7 +42,10 @@ export function SnapGrid({
 
   if (snaps.length === 0 && !isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
+      <div
+        data-testid="snap-grid"
+        className="flex flex-col items-center justify-center py-24 text-center"
+      >
         <p className="text-sm text-denim/50 dark:text-offwhite/40">
           該当するコーデが見つかりません
         </p>

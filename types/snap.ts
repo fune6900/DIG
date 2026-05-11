@@ -5,6 +5,12 @@ import {
   DetectedItemSchema,
   EvaluationRadarSchema,
 } from "@/types/ootd";
+import { COLOR_CATEGORIES } from "@/lib/color-catalog";
+
+// 16 系統のカラー系統を型安全に制限する enum。
+// 保存(Snap.colorCategories)・検索入力(SnapSearchInput.colorCategories) 双方で
+// 同じ enum を共有し、16 系統以外の値が DB / API 経由で混入するのを防ぐ。
+const ColorCategoryEnum = z.enum(COLOR_CATEGORIES);
 
 export const SnapSchema = z.object({
   id: z.string().uuid(),
@@ -20,6 +26,10 @@ export const SnapSchema = z.object({
   // 同一画像が複数キーワードでヒットした履歴を全て保持する。
   // findSnapsByQuery は `{ has: query }` で配列内に当該キーワードがあるか判定する。
   searchQueries: z.array(z.string()),
+  // AI 解析で算出したカラー系統（lib/color-catalog.ts の 16 系統）。
+  // GIN インデックスで colorCategories フィルタ検索に使用する。
+  // 入力スキーマ(SnapSearchInputSchema.colorCategories) と同じ enum で揃える。
+  colorCategories: z.array(ColorCategoryEnum),
   oneLiner: z.string().nullable(),
   colorPalette: z.unknown().nullable(),
   styles: z.unknown().nullable(),
@@ -40,13 +50,25 @@ export const SnapSummarySchema = SnapSchema.pick({
 });
 export type SnapSummary = z.infer<typeof SnapSummarySchema>;
 
-export const SnapSearchInputSchema = z.object({
-  // trim を先に適用して "   " のような空白のみ入力を弾く（サーバー側ガード）
-  query: z.string().trim().min(1).max(200),
-  page: z.number().int().min(1).default(1),
-  // Unsplash Search Photos API の per_page 上限が 30 のため合わせる
-  pageSize: z.number().int().min(1).max(30).default(30),
-});
+// query / styles / colorCategories のいずれかを必ず指定する。
+// 既存テスト（query のみ指定）は refine を満たすため互換性は維持される。
+export const SnapSearchInputSchema = z
+  .object({
+    // trim を先に適用して "   " のような空白のみ入力を弾く（サーバー側ガード）
+    query: z.string().trim().max(200).optional(),
+    styles: z.array(z.string()).optional(),
+    colorCategories: z.array(ColorCategoryEnum).optional(),
+    page: z.number().int().min(1).default(1),
+    // Unsplash Search Photos API の per_page 上限が 30 のため合わせる
+    pageSize: z.number().int().min(1).max(30).default(30),
+  })
+  .refine(
+    (v) =>
+      Boolean(v.query) ||
+      (v.styles?.length ?? 0) > 0 ||
+      (v.colorCategories?.length ?? 0) > 0,
+    { message: "query, styles, colorCategories のいずれか必須" },
+  );
 export type SnapSearchInput = z.infer<typeof SnapSearchInputSchema>;
 
 export const SnapSearchResultSchema = z.object({

@@ -43,6 +43,7 @@ const makeSnapRecord = (
   description: "A stylish outfit",
   tags: ["fashion", "outfit"],
   searchQueries: overrides.searchQueries ?? ["denim jacket"],
+  colorCategories: [] as string[],
   oneLiner: null,
   colorPalette: null,
   styles: null,
@@ -119,14 +120,14 @@ describe("findSnapsByQuery", () => {
     );
   });
 
-  it("searchQueries に query が含まれるレコードを has で絞り込む", async () => {
+  it("searchQueries に query が含まれるレコードを hasSome で絞り込む", async () => {
     vi.mocked(prisma.snap.findMany).mockResolvedValue([]);
 
     await findSnapsByQuery({ query: "M-65", page: 1, pageSize: 30 });
 
     expect(prisma.snap.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { searchQueries: { has: "M-65" } },
+        where: { searchQueries: { hasSome: ["M-65"] } },
         orderBy: { createdAt: "desc" },
       }),
     );

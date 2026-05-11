@@ -51,6 +51,7 @@ const makeSnapDetailAnalyzed = (
   description: null,
   tags: ["fashion"],
   searchQueries: ["M-65", "アメカジ"],
+  colorCategories: [],
   oneLiner: "静謐な倦怠",
   colorPalette: [
     { name: "インディゴ", colorCode: "#3B4D6B", percentage: 70 },

@@ -9,6 +9,7 @@ import {
   findSimilarSnaps,
 } from "@/services/snap-service";
 import { analyzeSnapImage } from "@/services/snap-analysis";
+import { categorizeColorPalette } from "@/lib/color-categorize";
 
 type ActionResult<T> =
   | { data: T; error: null }
@@ -75,6 +76,7 @@ export async function analyzeSnapAction(
 
   try {
     const analysisResult = await analyzeSnapImage(snap.imageUrl);
+    const colorCategories = categorizeColorPalette(analysisResult.colorPalette);
     const updatedSnap = await updateSnap(parsed.data, {
       oneLiner: analysisResult.oneLiner,
       colorPalette: analysisResult.colorPalette as Prisma.InputJsonValue,
@@ -85,6 +87,7 @@ export async function analyzeSnapAction(
         analysisResult.radarScores != null
           ? (analysisResult.radarScores as Prisma.InputJsonValue)
           : Prisma.DbNull,
+      colorCategories,
       analyzedAt: new Date(),
     });
     return { data: updatedSnap as SnapDetail, error: null };
