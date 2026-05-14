@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SearchIcon, ImageIcon } from "@/components/ui/icons";
+import {
+  parseKeywordIntoChips,
+  removeChipFromKeyword,
+} from "@/lib/conditions-keyword";
 
 interface SearchInputProps {
   onSearch: (query: string) => void;
@@ -16,12 +20,26 @@ export function SearchInput({
 }: SearchInputProps) {
   const [value, setValue] = useState(initialQuery);
 
+  // 親 (URL) が変わったときに表示を追従させる
+  useEffect(() => {
+    setValue(initialQuery);
+  }, [initialQuery]);
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const trimmed = value.trim();
     if (trimmed.length === 0) return;
     onSearch(trimmed);
   }
+
+  function handleRemoveChip(chip: string) {
+    const next = removeChipFromKeyword(value, chip);
+    setValue(next);
+    onSearch(next);
+  }
+
+  const chips = parseKeywordIntoChips(value);
+  const showChips = chips.length >= 2;
 
   return (
     <div className="space-y-2 w-full">
@@ -53,6 +71,29 @@ export function SearchInput({
           検索
         </button>
       </form>
+
+      {showChips && (
+        <ul className="flex flex-wrap gap-1.5" aria-label="検索条件">
+          {chips.map((chip) => (
+            <li key={chip}>
+              <button
+                type="button"
+                onClick={() => handleRemoveChip(chip)}
+                aria-label={`${chip}を削除`}
+                className="inline-flex items-center gap-1 rounded-none border border-denim/30 bg-offwhite px-2 py-1 text-xs text-denim transition-colors hover:border-denim hover:bg-denim/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2 dark:border-offwhite/30 dark:bg-canvas-subtle dark:text-offwhite dark:hover:border-offwhite dark:hover:bg-offwhite/5"
+              >
+                <span>{chip}</span>
+                <span
+                  aria-hidden="true"
+                  className="text-denim/50 dark:text-offwhite/50"
+                >
+                  ×
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <div className="flex justify-end">
         <button

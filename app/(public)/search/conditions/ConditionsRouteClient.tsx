@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { ConditionsForm } from "@/components/features/search/ConditionsForm";
+import { buildKeywordFromConditions } from "@/lib/conditions-keyword";
 
 export function ConditionsRouteClient() {
   const router = useRouter();
@@ -20,12 +21,12 @@ export function ConditionsRouteClient() {
     styles: string[];
     colors: string[];
   }) {
-    const urlParams = new URLSearchParams();
-    if (params.query) urlParams.set("query", params.query);
-    if (params.styles.length > 0)
-      urlParams.set("styles", params.styles.join(","));
-    if (params.colors.length > 0)
-      urlParams.set("colors", params.colors.join(","));
+    const keyword = buildKeywordFromConditions(params);
+    if (keyword.length === 0) {
+      router.push("/search");
+      return;
+    }
+    const urlParams = new URLSearchParams({ query: keyword });
     router.push(`/search?${urlParams.toString()}`);
   }
 

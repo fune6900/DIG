@@ -41,7 +41,8 @@ export function SearchPage() {
     if (q) params.set("query", q);
     if (stylesParam) params.set("styles", stylesParam);
     if (colorsParam) params.set("colors", colorsParam);
-    router.push(`/search?${params.toString()}`);
+    const search = params.toString();
+    router.push(search ? `/search?${search}` : "/search");
   }
 
   async function handleImagePick(file: File) {

@@ -309,6 +309,107 @@ describe("ConditionsForm — 検索ボタン", () => {
 });
 
 // ---------------------------------------------------------------------------
+// キーワード入力（編集可能）
+// ---------------------------------------------------------------------------
+describe("ConditionsForm — キーワード入力", () => {
+  it("キーワード入力フィールドが表示される", () => {
+    render(
+      <ConditionsForm
+        initialStyles={[]}
+        initialColors={[]}
+        initialQuery=""
+        onSearch={vi.fn()}
+        onReset={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("textbox", { name: /キーワード/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("initialQuery が指定されたとき入力フィールドに初期値として表示される", () => {
+    render(
+      <ConditionsForm
+        initialStyles={[]}
+        initialColors={[]}
+        initialQuery="vintage denim"
+        onSearch={vi.fn()}
+        onReset={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("textbox", { name: /キーワード/ })).toHaveValue(
+      "vintage denim",
+    );
+  });
+
+  it("キーワードを編集して検索 → 編集後の値が onSearch の query に渡る", async () => {
+    const onSearch = vi.fn();
+    render(
+      <ConditionsForm
+        initialStyles={["アメカジ"]}
+        initialColors={[]}
+        initialQuery="vintage"
+        onSearch={onSearch}
+        onReset={vi.fn()}
+      />,
+    );
+
+    const input = screen.getByRole("textbox", { name: /キーワード/ });
+    await userEvent.clear(input);
+    await userEvent.type(input, "M-65");
+
+    await userEvent.click(screen.getByRole("button", { name: /検索/ }));
+
+    expect(onSearch).toHaveBeenCalledWith({
+      styles: ["アメカジ"],
+      colors: [],
+      query: "M-65",
+    });
+  });
+
+  it("キーワード入力のみで（スタイル・カラー未選択）「検索」ボタンが有効化される", async () => {
+    render(
+      <ConditionsForm
+        initialStyles={[]}
+        initialColors={[]}
+        initialQuery=""
+        onSearch={vi.fn()}
+        onReset={vi.fn()}
+      />,
+    );
+
+    const searchBtn = screen.getByRole("button", { name: /検索/ });
+    expect(searchBtn).toBeDisabled();
+
+    const input = screen.getByRole("textbox", { name: /キーワード/ });
+    await userEvent.type(input, "501");
+
+    expect(searchBtn).not.toBeDisabled();
+  });
+
+  it("「リセット」クリックでキーワードもクリアされる", async () => {
+    render(
+      <ConditionsForm
+        initialStyles={[]}
+        initialColors={[]}
+        initialQuery="vintage"
+        onSearch={vi.fn()}
+        onReset={vi.fn()}
+      />,
+    );
+
+    const input = screen.getByRole("textbox", { name: /キーワード/ });
+    expect(input).toHaveValue("vintage");
+
+    await userEvent.click(screen.getByRole("button", { name: /リセット/ }));
+
+    expect(input).toHaveValue("");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // リセットボタン
 // ---------------------------------------------------------------------------
 describe("ConditionsForm — リセットボタン", () => {

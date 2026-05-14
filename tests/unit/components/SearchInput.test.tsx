@@ -104,6 +104,83 @@ describe("SearchInput", () => {
     expect(input).toHaveValue("");
   });
 
+  describe("チップ表示（複数語キーワード）", () => {
+    it("initialQuery が複数語のときチップが各語ごとに表示される", () => {
+      render(
+        <SearchInput
+          onSearch={vi.fn()}
+          onImageSearch={vi.fn()}
+          initialQuery="アメカジ レッド"
+        />,
+      );
+
+      expect(
+        screen.getByRole("button", { name: /アメカジを削除/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /レッドを削除/ }),
+      ).toBeInTheDocument();
+    });
+
+    it("initialQuery が単一語のときはチップを表示しない", () => {
+      render(
+        <SearchInput
+          onSearch={vi.fn()}
+          onImageSearch={vi.fn()}
+          initialQuery="アメカジ"
+        />,
+      );
+
+      expect(
+        screen.queryByRole("button", { name: /アメカジを削除/ }),
+      ).toBeNull();
+    });
+
+    it("initialQuery が空のときはチップを表示しない", () => {
+      render(<SearchInput onSearch={vi.fn()} onImageSearch={vi.fn()} />);
+
+      expect(screen.queryByText("×")).toBeNull();
+    });
+
+    it("チップの × クリックで onSearch が残りの語のみで呼ばれる", async () => {
+      const onSearch = vi.fn();
+      render(
+        <SearchInput
+          onSearch={onSearch}
+          onImageSearch={vi.fn()}
+          initialQuery="アメカジ レッド ブルー"
+        />,
+      );
+
+      await userEvent.click(
+        screen.getByRole("button", { name: /レッドを削除/ }),
+      );
+
+      expect(onSearch).toHaveBeenCalledTimes(1);
+      expect(onSearch).toHaveBeenCalledWith("アメカジ ブルー");
+    });
+
+    it("2 語あるチップから 1 つ削除すると onSearch が残りの語で呼ばれる", async () => {
+      // 仕様: 削除して 1 語だけになるとチップは非表示になる（× は出ない）
+      // → 残りの語を直接テキスト編集して空にするパスでカバーされる
+      const onSearch = vi.fn();
+      render(
+        <SearchInput
+          onSearch={onSearch}
+          onImageSearch={vi.fn()}
+          initialQuery="アメカジ レッド"
+        />,
+      );
+
+      await userEvent.click(
+        screen.getByRole("button", { name: /アメカジを削除/ }),
+      );
+
+      expect(onSearch).toHaveBeenCalledTimes(1);
+      expect(onSearch).toHaveBeenCalledWith("レッド");
+    });
+  });
+
   describe("画像で検索（新フロー）", () => {
     it("『画像で検索』ボタンが表示される（Link ではない）", () => {
       render(<SearchInput onSearch={vi.fn()} onImageSearch={vi.fn()} />);
