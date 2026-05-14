@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { SearchIcon, ImageIcon } from "@/components/ui/icons";
 
 interface SearchInputProps {
   onSearch: (query: string) => void;
+  onImageSearch: () => void;
   initialQuery?: string;
 }
 
-export function SearchInput({ onSearch, initialQuery = "" }: SearchInputProps) {
+export function SearchInput({
+  onSearch,
+  onImageSearch,
+  initialQuery = "",
+}: SearchInputProps) {
   const [value, setValue] = useState(initialQuery);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -51,13 +55,14 @@ export function SearchInput({ onSearch, initialQuery = "" }: SearchInputProps) {
       </form>
 
       <div className="flex justify-end">
-        <Link
-          href="/search/image"
+        <button
+          type="button"
+          onClick={onImageSearch}
           className="inline-flex items-center gap-1.5 text-xs text-denim/50 dark:text-offwhite/40 hover:text-denim dark:hover:text-offwhite transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2"
         >
           <ImageIcon width={12} height={12} />
           画像で検索
-        </Link>
+        </button>
       </div>
     </div>
   );
