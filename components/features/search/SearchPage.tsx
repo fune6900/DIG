@@ -74,6 +74,9 @@ export function SearchPage() {
       }
       const { styles: detectedStyles, colorCategories: detectedColors } =
         result.data;
+      // 画像検索は styles/colors の URL に切り替わるので、テキスト検索の
+      // query state が残らないようにクリアする
+      setQuery("");
       router.push(buildImageSearchUrl(detectedStyles, detectedColors));
     } catch (err) {
       console.error("[SearchPage] image analysis failed", err);

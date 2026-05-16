@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SearchIcon, ImageIcon } from "@/components/ui/icons";
 
 interface SearchInputProps {
@@ -15,6 +15,11 @@ export function SearchInput({
   initialQuery = "",
 }: SearchInputProps) {
   const [value, setValue] = useState(initialQuery);
+
+  // 親 (URL) が変わったときに表示を追従させる
+  useEffect(() => {
+    setValue(initialQuery);
+  }, [initialQuery]);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

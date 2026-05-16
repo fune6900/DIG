@@ -24,7 +24,7 @@ vi.mock("@/hooks/useInfiniteSnapSearch", () => ({
 }));
 
 const pushMock = vi.fn();
-const mockSearchParams = { get: vi.fn(() => null) };
+const mockSearchParams = { get: vi.fn() };
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock, replace: vi.fn() }),
@@ -140,8 +140,36 @@ describe("SearchPage — 画像選択後の解析フロー", () => {
     });
 
     const pushedUrl: string = pushMock.mock.calls[0][0];
-    expect(pushedUrl).toContain("styles=ストリートウェア");
-    expect(pushedUrl).toContain("colors=ネイビー系");
+    expect(pushedUrl).toContain("styles=");
+    expect(pushedUrl).toContain("colors=");
+    const url = new URL(pushedUrl, "http://x");
+    expect(url.searchParams.get("styles")).toBe("ストリートウェア");
+    expect(url.searchParams.get("colors")).toBe("ネイビー系");
+  });
+
+  it("画像検索成功後にテキスト検索の query state がクリアされる", async () => {
+    mockSearchParams.get.mockImplementation((key: string) =>
+      key === "query" ? "hoge" : null,
+    );
+    analyzeImageForSearchActionMock.mockResolvedValue(SUCCESS_ANALYSIS);
+
+    render(<SearchPage />);
+
+    expect(screen.getByRole("textbox")).toHaveValue("hoge");
+
+    await userEvent.click(screen.getByRole("button", { name: /画像で検索/ }));
+    const albumInput = screen.getByTestId(
+      "image-search-album-input",
+    ) as HTMLInputElement;
+    fireEvent.change(albumInput, { target: { files: [makeJpegFile()] } });
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole("textbox")).toHaveValue("");
+    });
   });
 
   it("画像選択直後にシートは閉じる（中間プレビューなし）", async () => {
