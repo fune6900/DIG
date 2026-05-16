@@ -45,7 +45,9 @@ export function parseKeywordIntoChips(query: string): string[] {
 }
 
 export function removeChipFromKeyword(query: string, chip: string): string {
-  return parseKeywordIntoChips(query)
-    .filter((c) => c !== chip)
-    .join(" ");
+  const chips = parseKeywordIntoChips(query);
+  const idx = chips.indexOf(chip);
+  if (idx === -1) return chips.join(" ");
+  chips.splice(idx, 1);
+  return chips.join(" ");
 }

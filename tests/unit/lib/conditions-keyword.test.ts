@@ -127,4 +127,14 @@ describe("removeChipFromKeyword", () => {
       "アメカジ レッド",
     );
   });
+
+  it("同じ語が複数あるときは最初の 1 件のみ削除する", () => {
+    expect(removeChipFromKeyword("アメカジ アメカジ レッド", "アメカジ")).toBe(
+      "アメカジ レッド",
+    );
+  });
+
+  it("同じ語が 3 つあるときは 1 件削除すると 2 件残る", () => {
+    expect(removeChipFromKeyword("a a a b", "a")).toBe("a a b");
+  });
 });

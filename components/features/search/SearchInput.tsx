@@ -74,8 +74,8 @@ export function SearchInput({
 
       {showChips && (
         <ul className="flex flex-wrap gap-1.5" aria-label="検索条件">
-          {chips.map((chip) => (
-            <li key={chip}>
+          {chips.map((chip, index) => (
+            <li key={`${chip}-${index}`}>
               <button
                 type="button"
                 onClick={() => handleRemoveChip(chip)}
