@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { CalendarIcon, PlusIcon, SearchIcon } from "@/components/ui/icons";
+import {
+  FadeIn,
+  HoverLift,
+  StaggerChildren,
+  StaggerItem,
+} from "@/components/ui/motion";
 
 const FEATURES = [
   {
@@ -35,7 +41,10 @@ export function FeaturesSection() {
   return (
     <section className="relative overflow-hidden bg-denim-dark px-6 py-24 text-offwhite dark:bg-canvas sm:py-32">
       <div className="mx-auto max-w-5xl">
-        <header className="mb-16 flex flex-col items-center text-center sm:mb-20">
+        <FadeIn
+          as="header"
+          className="mb-16 flex flex-col items-center text-center sm:mb-20"
+        >
           <p
             aria-label="Features"
             className="mb-3 text-2xs font-medium tracking-[0.4em] text-offwhite/40 uppercase"
@@ -48,34 +57,39 @@ export function FeaturesSection() {
           <p className="mt-6 max-w-xl text-sm leading-relaxed text-offwhite/60 sm:text-base">
             3 つの機能で、古着との付き合い方を再発明する。
           </p>
-        </header>
+        </FadeIn>
 
-        <div className="grid grid-cols-1 gap-px bg-offwhite/10 sm:grid-cols-3">
+        <StaggerChildren className="grid grid-cols-1 gap-px bg-offwhite/10 sm:grid-cols-3">
           {FEATURES.map(({ no, label, ja, desc, href, cta, Icon }) => (
-            <Link
-              key={no}
-              href={href}
-              className="group relative flex flex-col gap-4 bg-denim-dark p-8 transition-colors hover:bg-denim sm:p-10"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-2xs font-medium tracking-[0.3em] text-offwhite/40 uppercase">
-                  {no}
-                </span>
-                <Icon width={20} height={20} className="text-offwhite/60" />
-              </div>
-              <p className="font-display text-3xl tracking-widest sm:text-4xl">
-                {ja}
-              </p>
-              <p className="text-2xs font-medium tracking-[0.3em] text-denim-light uppercase">
-                {label}
-              </p>
-              <p className="text-sm leading-relaxed text-offwhite/60">{desc}</p>
-              <span className="mt-4 inline-flex items-center gap-2 self-start border-b border-offwhite/40 pb-1 text-xs tracking-widest text-offwhite/80 transition-colors group-hover:border-offwhite group-hover:text-offwhite">
-                {cta} →
-              </span>
-            </Link>
+            <StaggerItem key={no}>
+              <HoverLift className="h-full">
+                <Link
+                  href={href}
+                  className="group relative flex h-full flex-col gap-4 bg-denim-dark p-8 transition-colors hover:bg-denim sm:p-10"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xs font-medium tracking-[0.3em] text-offwhite/40 uppercase">
+                      {no}
+                    </span>
+                    <Icon width={20} height={20} className="text-offwhite/60" />
+                  </div>
+                  <p className="font-display text-3xl tracking-widest sm:text-4xl">
+                    {ja}
+                  </p>
+                  <p className="text-2xs font-medium tracking-[0.3em] text-denim-light uppercase">
+                    {label}
+                  </p>
+                  <p className="text-sm leading-relaxed text-offwhite/60">
+                    {desc}
+                  </p>
+                  <span className="mt-4 inline-flex items-center gap-2 self-start border-b border-offwhite/40 pb-1 text-xs tracking-widest text-offwhite/80 transition-colors group-hover:border-offwhite group-hover:text-offwhite">
+                    {cta} →
+                  </span>
+                </Link>
+              </HoverLift>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerChildren>
       </div>
     </section>
   );

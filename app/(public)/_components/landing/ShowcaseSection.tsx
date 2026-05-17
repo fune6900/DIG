@@ -1,3 +1,5 @@
+import { FadeIn, StaggerChildren, StaggerItem } from "@/components/ui/motion";
+
 // Showcase はトップ LP のギャラリー帯。実画像差し替えは後続 PR で対応する想定で、
 // 今は CSS グラデーションのプレースホルダタイルで構成する。
 const SHOWCASE_TILES = [
@@ -33,7 +35,10 @@ export function ShowcaseSection() {
   return (
     <section className="relative overflow-hidden bg-offwhite-subtle px-6 py-24 dark:bg-canvas-subtle sm:py-32">
       <div className="mx-auto max-w-6xl">
-        <header className="mb-16 flex flex-col items-center text-center sm:mb-20">
+        <FadeIn
+          as="header"
+          className="mb-16 flex flex-col items-center text-center sm:mb-20"
+        >
           <p
             aria-label="Showcase"
             className="mb-3 text-2xs font-medium tracking-[0.4em] text-denim/50 dark:text-offwhite/40 uppercase"
@@ -46,15 +51,18 @@ export function ShowcaseSection() {
           <p className="mt-6 max-w-xl text-sm leading-relaxed text-denim/70 dark:text-offwhite/60 sm:text-base">
             記録されたコーデから、年代とスタイルの片鱗を覗き見る。
           </p>
-        </header>
+        </FadeIn>
 
-        <ul
+        <StaggerChildren
+          as="ul"
           aria-label="ショーケース"
           className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4"
+          stagger={0.08}
         >
           {SHOWCASE_TILES.map((tile, idx) => (
-            <li
+            <StaggerItem
               key={`${tile.era}-${tile.style}-${idx}`}
+              as="li"
               className="group relative aspect-[3/4] overflow-hidden border border-denim/10 dark:border-offwhite/10"
             >
               <div
@@ -70,9 +78,9 @@ export function ShowcaseSection() {
                   {tile.style}
                 </span>
               </div>
-            </li>
+            </StaggerItem>
           ))}
-        </ul>
+        </StaggerChildren>
       </div>
     </section>
   );

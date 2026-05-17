@@ -3,6 +3,27 @@
 import { motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 
+type StaggerTag = "div" | "section" | "article" | "ul" | "ol" | "header";
+
+const PARENT_MOTION_TAGS = {
+  div: motion.div,
+  section: motion.section,
+  article: motion.article,
+  ul: motion.ul,
+  ol: motion.ol,
+  header: motion.header,
+} as const;
+
+const ITEM_MOTION_TAGS = {
+  div: motion.div,
+  section: motion.section,
+  article: motion.article,
+  li: motion.li,
+  header: motion.header,
+} as const;
+
+type StaggerItemTag = keyof typeof ITEM_MOTION_TAGS;
+
 interface StaggerChildrenProps {
   children: ReactNode;
   /** 子要素間の遅延 (秒) */
@@ -11,6 +32,8 @@ interface StaggerChildrenProps {
   delayChildren?: number;
   /** 一度だけ発火するか */
   once?: boolean;
+  /** ラップ要素のタグ。リストとして使うときは "ul"/"ol" を指定 */
+  as?: StaggerTag;
   className?: string;
 }
 
@@ -23,16 +46,20 @@ export function StaggerChildren({
   stagger = 0.1,
   delayChildren = 0,
   once = true,
+  as = "div",
   className,
 }: StaggerChildrenProps) {
   const reduced = useReducedMotion();
 
   if (reduced) {
-    return <div className={className}>{children}</div>;
+    const Static = as;
+    return <Static className={className}>{children}</Static>;
   }
 
+  const Tag = PARENT_MOTION_TAGS[as];
+
   return (
-    <motion.div
+    <Tag
       className={className}
       initial="hidden"
       whileInView="visible"
@@ -48,7 +75,7 @@ export function StaggerChildren({
       }}
     >
       {children}
-    </motion.div>
+    </Tag>
   );
 }
 
@@ -58,27 +85,34 @@ interface StaggerItemProps {
   y?: number;
   /** アニメーション尺 (秒) */
   duration?: number;
+  /** ラップ要素のタグ。親が "ul" のときは "li" を指定すること */
+  as?: StaggerItemTag;
   className?: string;
 }
 
 /**
- * StaggerChildren の子として使うアイテム。
- * 親の variants に応じて hidden / visible を切り替える。
+ * StaggerChildren の子として使うアイテム。親の variants に応じて
+ * hidden / visible を切り替える。**必ず StaggerChildren 配下で使うこと**:
+ * 単独で使うと親 variants が無いため hidden (opacity: 0) のままになる。
  */
 export function StaggerItem({
   children,
   y = 16,
   duration = 0.6,
+  as = "div",
   className,
 }: StaggerItemProps) {
   const reduced = useReducedMotion();
 
   if (reduced) {
-    return <div className={className}>{children}</div>;
+    const Static = as;
+    return <Static className={className}>{children}</Static>;
   }
 
+  const Tag = ITEM_MOTION_TAGS[as];
+
   return (
-    <motion.div
+    <Tag
       className={className}
       variants={{
         hidden: { opacity: 0, y },
@@ -90,6 +124,6 @@ export function StaggerItem({
       }}
     >
       {children}
-    </motion.div>
+    </Tag>
   );
 }
