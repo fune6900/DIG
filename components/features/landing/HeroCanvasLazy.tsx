@@ -15,27 +15,26 @@ const HeroCanvas = dynamic(
  *
  * - prefers-reduced-motion: reduce なら一切ロードしない（CO2/Perf/UX）
  * - IntersectionObserver でビューポート侵入後にだけ dynamic import を起動
- * - スクロール進行度を子に渡してカメラ/オブジェクトに反映させる
+ * - スクロール進行度を MotionValue として子に渡す。React state を介すと
+ *   毎フレーム再レンダリングで Canvas が reconcile されるため、ref 経由で
+ *   購読する設計にする
  * - aria-hidden=true で純装飾扱い、HERO 内の CTA/テキストの読み上げを阻害しない
+ *
+ * 注: useScroll の target は本コンポーネントの wrapper を指す。wrapper は
+ * 親 HeroSection に対して absolute inset-0 で覆われているため、実質的に
+ * セクション基準の進行度として機能する。
  */
 export function HeroCanvasLazy() {
   const ref = useRef<HTMLDivElement>(null);
   const [shouldRender, setShouldRender] = useState(false);
   const reduced = useReducedMotion();
 
-  // セクション基準のスクロール進行度。reduced-motion 時は購読しても
-  // 子で使わないので副作用は無視できる。
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start end", "end start"],
   });
+  // MotionValue のまま子へ渡す（state 化しない）
   const progress = useTransform(scrollYProgress, [0, 1], [0, 1]);
-  const [progressValue, setProgressValue] = useState(0);
-
-  useEffect(() => {
-    if (reduced) return;
-    return progress.on("change", (v) => setProgressValue(v));
-  }, [progress, reduced]);
 
   useEffect(() => {
     if (reduced) return;
@@ -62,7 +61,7 @@ export function HeroCanvasLazy() {
       aria-hidden="true"
       className="pointer-events-none absolute inset-0"
     >
-      {shouldRender && <HeroCanvas scrollProgress={progressValue} />}
+      {shouldRender && !reduced && <HeroCanvas scrollProgress={progress} />}
     </div>
   );
 }

@@ -60,3 +60,54 @@ describe("HeroCanvasLazy", () => {
     expect(wrapper?.childNodes.length).toBe(0);
   });
 });
+
+describe("HeroCanvasLazy — IntersectionObserver ライフサイクル", () => {
+  const origIO = global.IntersectionObserver;
+  let ctorSpy: ReturnType<typeof vi.fn<() => void>>;
+  let observeSpy: ReturnType<typeof vi.fn<() => void>>;
+  let disconnectSpy: ReturnType<typeof vi.fn<() => void>>;
+
+  beforeEach(() => {
+    ctorSpy = vi.fn();
+    observeSpy = vi.fn();
+    disconnectSpy = vi.fn();
+
+    class SpyIO {
+      observe = observeSpy;
+      disconnect = disconnectSpy;
+      unobserve = vi.fn();
+      takeRecords() {
+        return [];
+      }
+      constructor() {
+        ctorSpy();
+      }
+    }
+    global.IntersectionObserver =
+      SpyIO as unknown as typeof IntersectionObserver;
+  });
+
+  afterEach(() => {
+    global.IntersectionObserver = origIO;
+  });
+
+  it("通常時は IntersectionObserver が生成され observe が呼ばれる", () => {
+    render(<HeroCanvasLazy />);
+    expect(ctorSpy).toHaveBeenCalledTimes(1);
+    expect(observeSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("unmount 時に observer.disconnect() が呼ばれる（リーク防止）", () => {
+    const { unmount } = render(<HeroCanvasLazy />);
+    expect(disconnectSpy).not.toHaveBeenCalled();
+    unmount();
+    expect(disconnectSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("reduced-motion 時は IntersectionObserver を生成しない", () => {
+    useReducedMotionMock.mockReturnValue(true);
+    render(<HeroCanvasLazy />);
+    expect(ctorSpy).not.toHaveBeenCalled();
+    expect(observeSpy).not.toHaveBeenCalled();
+  });
+});

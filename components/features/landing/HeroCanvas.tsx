@@ -1,7 +1,8 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import type { MotionValue } from "motion/react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 // ---------------------------------------------------------------------------
@@ -64,11 +65,15 @@ const EXTRUDE_SETTINGS: THREE.ExtrudeGeometryOptions = {
 };
 
 interface DigShovelMarkProps {
-  /** スクロール進行度 (0..1)。回転速度に微弱に反映する */
-  scrollProgress?: number;
+  /**
+   * スクロール進行度 (0..1) を保持する MotionValue。
+   * React state ではなく MotionValue 経由で受けることで、
+   * 親側の毎フレーム再レンダリングを回避する。
+   */
+  scrollProgress?: MotionValue<number>;
 }
 
-function DigShovelMark({ scrollProgress = 0 }: DigShovelMarkProps) {
+function DigShovelMark({ scrollProgress }: DigShovelMarkProps) {
   const groupRef = useRef<THREE.Group>(null);
 
   const dGeometry = useMemo(() => {
@@ -83,17 +88,26 @@ function DigShovelMark({ scrollProgress = 0 }: DigShovelMarkProps) {
     return geo;
   }, []);
 
-  useFrame((_, delta) => {
+  // R3F は JSX で attach された material は自動 dispose するが、
+  // useMemo + geometry prop 経由のインスタンスは管理外。明示的に解放する。
+  useEffect(() => {
+    return () => {
+      dGeometry.dispose();
+      shovelGeometry.dispose();
+    };
+  }, [dGeometry, shovelGeometry]);
+
+  useFrame((state, delta) => {
     if (!groupRef.current) return;
-    // 基本の自転 + スクロール進行で少しスピードアップ
-    groupRef.current.rotation.y += delta * (0.25 + scrollProgress * 0.4);
+    const sp = scrollProgress?.get() ?? 0;
+    groupRef.current.rotation.y += delta * (0.25 + sp * 0.4);
     groupRef.current.rotation.x =
-      Math.sin(performance.now() / 3500) * 0.08 + scrollProgress * 0.15;
+      Math.sin(state.clock.elapsedTime * 0.3) * 0.08 + sp * 0.15;
   });
 
   return (
     <group ref={groupRef}>
-      <mesh geometry={dGeometry} castShadow receiveShadow>
+      <mesh geometry={dGeometry}>
         <meshStandardMaterial
           color="#f8f4ed"
           metalness={0.15}
@@ -104,7 +118,6 @@ function DigShovelMark({ scrollProgress = 0 }: DigShovelMarkProps) {
         geometry={shovelGeometry}
         position={[0.05, -0.05, 0.18]}
         scale={[0.65, 0.65, 1]}
-        castShadow
       >
         <meshStandardMaterial
           color="#c0392b"
@@ -117,7 +130,7 @@ function DigShovelMark({ scrollProgress = 0 }: DigShovelMarkProps) {
 }
 
 interface HeroCanvasProps {
-  scrollProgress?: number;
+  scrollProgress?: MotionValue<number>;
 }
 
 /**
@@ -125,7 +138,7 @@ interface HeroCanvasProps {
  * 親 (HeroCanvasLazy) が IntersectionObserver と reduced-motion を見て
  * このコンポーネントの mount を制御する。
  */
-export function HeroCanvas({ scrollProgress = 0 }: HeroCanvasProps) {
+export function HeroCanvas({ scrollProgress }: HeroCanvasProps) {
   return (
     <Canvas
       camera={{ position: [0, 0, 3.6], fov: 42 }}
