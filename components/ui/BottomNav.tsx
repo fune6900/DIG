@@ -28,7 +28,7 @@ export function BottomNav() {
             className="flex h-14 w-14 flex-col items-center justify-center rounded-full bg-offwhite/80 backdrop-blur-md text-denim-dark shadow-lg ring-1 ring-denim/10 transition-all hover:bg-offwhite hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2 dark:bg-canvas-subtle/80 dark:text-offwhite dark:ring-offwhite/10"
           >
             <SearchIcon width={20} height={20} />
-            <span className="text-[9px] font-medium tracking-wider mt-0.5">
+            <span className="text-2xs font-medium tracking-wider mt-0.5">
               検索
             </span>
           </Link>
@@ -47,7 +47,7 @@ export function BottomNav() {
             className="flex h-14 w-14 flex-col items-center justify-center rounded-full bg-offwhite/80 backdrop-blur-md text-denim-dark shadow-lg ring-1 ring-denim/10 transition-all hover:bg-offwhite hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-2 dark:bg-canvas-subtle/80 dark:text-offwhite dark:ring-offwhite/10"
           >
             <CalendarIcon width={20} height={20} />
-            <span className="text-[9px] font-medium tracking-wider mt-0.5">
+            <span className="text-2xs font-medium tracking-wider mt-0.5">
               一覧
             </span>
           </Link>

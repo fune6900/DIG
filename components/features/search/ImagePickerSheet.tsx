@@ -46,7 +46,7 @@ export function ImagePickerSheet({
         type="button"
         aria-label="閉じる"
         data-testid="image-picker-sheet-backdrop"
-        className="absolute inset-0 bg-canvas/60 backdrop-blur-sm dark:bg-canvas-dark/60"
+        className="absolute inset-0 bg-canvas/60 backdrop-blur-sm dark:bg-canvas/60"
         onClick={onClose}
       />
 

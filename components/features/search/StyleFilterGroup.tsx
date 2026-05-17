@@ -36,7 +36,7 @@ export function StyleFilterGroup({
                 onChange={() => onToggle(styleName)}
                 className="h-4 w-4 rounded-none accent-denim dark:accent-denim-light focus-visible:ring-2 focus-visible:ring-denim focus-visible:ring-offset-1 cursor-pointer"
               />
-              <span className="text-sm text-canvas-fg dark:text-offwhite">
+              <span className="text-sm text-denim-dark dark:text-offwhite">
                 {styleName}
               </span>
             </label>

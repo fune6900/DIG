@@ -140,7 +140,7 @@ export function SearchPage() {
           role="status"
           aria-busy="true"
           aria-label="画像を解析中"
-          className="fixed inset-0 z-40 flex items-center justify-center bg-canvas/70 backdrop-blur-sm dark:bg-canvas-dark/70"
+          className="fixed inset-0 z-40 flex items-center justify-center bg-canvas/70 backdrop-blur-sm dark:bg-canvas/70"
         >
           <div className="flex flex-col items-center gap-3 border border-denim/20 bg-offwhite px-6 py-5 shadow-lg dark:border-offwhite/20 dark:bg-canvas-subtle">
             <Spinner size="md" />

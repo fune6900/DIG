@@ -34,7 +34,7 @@ export function ColorFilterGrid({ selected, onToggle }: ColorFilterGridProps) {
               style={{ backgroundColor: swatch }}
               aria-hidden="true"
             />
-            <span className="text-[10px] leading-tight text-center text-canvas-fg dark:text-offwhite">
+            <span className="text-2xs leading-tight text-center text-denim-dark dark:text-offwhite">
               {cat}
             </span>
           </button>
