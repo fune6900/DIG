@@ -1,5 +1,4 @@
 import "@testing-library/jest-dom";
-import { vi } from "vitest";
 
 // jsdom には ResizeObserver が存在しないため recharts の ResponsiveContainer が
 // エラーを出す。最小限のモックで解消する。
@@ -22,19 +21,23 @@ global.IntersectionObserver =
   MockIntersectionObserver as unknown as typeof IntersectionObserver;
 
 // motion の useReducedMotion 等が使う matchMedia の最小モック。
-// 既定では reduce 指定なしとして返し、必要に応じてテスト側で上書きする。
-if (typeof window !== "undefined" && !window.matchMedia) {
+// 注意: vi.fn() は使わない。テストが vi.resetAllMocks() を呼ぶと
+// mockImplementation がクリアされ matchMedia() が undefined を返す
+// 状態になり、motion lib の addEventListener 呼び出しが落ちるため、
+// 通常関数で実装する。
+if (typeof window !== "undefined") {
   Object.defineProperty(window, "matchMedia", {
     writable: true,
-    value: vi.fn().mockImplementation((query: string) => ({
+    configurable: true,
+    value: (query: string) => ({
       matches: false,
       media: query,
       onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })),
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }),
   });
 }

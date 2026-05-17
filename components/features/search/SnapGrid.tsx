@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { SnapSummary } from "@/types/snap";
 import { SnapCard } from "./SnapCard";
+import { FadeIn } from "@/components/ui/motion";
 import { Spinner } from "@/components/ui/Spinner";
 
 interface SnapGridProps {
@@ -56,8 +57,13 @@ export function SnapGrid({
   return (
     <div data-testid="snap-grid">
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-        {snaps.map((snap) => (
-          <SnapCard key={snap.id} snap={snap} />
+        {snaps.map((snap, idx) => (
+          // 初回 mount 時にカードを軽くフェードイン。無限スクロールで late item
+          // が長く待たないように delay を上限 0.3s で打ち切る。once:true なので
+          // 再ロード時に発火しない。
+          <FadeIn key={snap.id} y={8} delay={Math.min(idx * 0.03, 0.3)}>
+            <SnapCard snap={snap} />
+          </FadeIn>
         ))}
       </div>
 
