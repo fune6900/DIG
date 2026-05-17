@@ -56,4 +56,37 @@ describe("HoverLift", () => {
     const wrapper = screen.getByTestId("child").parentElement!;
     expect(wrapper).toHaveClass("card");
   });
+
+  describe("as prop によるタグ切替", () => {
+    it("as='article' で article タグでレンダリングされる", () => {
+      render(
+        <HoverLift as="article">
+          <span data-testid="child">x</span>
+        </HoverLift>,
+      );
+      const wrap = screen.getByTestId("child").parentElement!;
+      expect(wrap.tagName.toLowerCase()).toBe("article");
+    });
+
+    it("as='li' で li タグでレンダリングされる（リスト内利用）", () => {
+      render(
+        <HoverLift as="li">
+          <span data-testid="child">x</span>
+        </HoverLift>,
+      );
+      const wrap = screen.getByTestId("child").parentElement!;
+      expect(wrap.tagName.toLowerCase()).toBe("li");
+    });
+
+    it("reduced-motion 時も as 指定のタグでレンダリングされる", () => {
+      useReducedMotionMock.mockReturnValue(true);
+      render(
+        <HoverLift as="article">
+          <span data-testid="child">x</span>
+        </HoverLift>,
+      );
+      const wrap = screen.getByTestId("child").parentElement!;
+      expect(wrap.tagName.toLowerCase()).toBe("article");
+    });
+  });
 });

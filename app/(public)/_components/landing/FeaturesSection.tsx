@@ -61,7 +61,7 @@ export function FeaturesSection() {
 
         <StaggerChildren className="grid grid-cols-1 gap-px bg-offwhite/10 sm:grid-cols-3">
           {FEATURES.map(({ no, label, ja, desc, href, cta, Icon }) => (
-            <StaggerItem key={no}>
+            <StaggerItem key={no} className="h-full">
               <HoverLift className="h-full">
                 <Link
                   href={href}

@@ -3,6 +3,8 @@
 import { motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 
+// HoverLift の as は hover 対象としてよく使うタグに限定。
+// 「リスト全体を hover」のような用途は想定しないため ul/ol は含めない。
 type HoverLiftTag = "div" | "section" | "article" | "li";
 
 const MOTION_TAGS = {
@@ -21,6 +23,8 @@ interface HoverLiftProps {
   /** ラップ要素のタグ */
   as?: HoverLiftTag;
   className?: string;
+  /** 必要に応じて伝播させる a11y ラベル */
+  "aria-label"?: string;
 }
 
 /**
@@ -33,12 +37,17 @@ export function HoverLift({
   scale = 1.02,
   as = "div",
   className,
+  "aria-label": ariaLabel,
 }: HoverLiftProps) {
   const reduced = useReducedMotion();
 
   if (reduced) {
     const Static = as;
-    return <Static className={className}>{children}</Static>;
+    return (
+      <Static className={className} aria-label={ariaLabel}>
+        {children}
+      </Static>
+    );
   }
 
   const Tag = MOTION_TAGS[as];
@@ -46,6 +55,7 @@ export function HoverLift({
   return (
     <Tag
       className={className}
+      aria-label={ariaLabel}
       whileHover={{ y: -lift, scale }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
     >

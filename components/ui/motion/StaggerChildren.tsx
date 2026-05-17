@@ -3,6 +3,10 @@
 import { motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 
+// 親 (StaggerChildren) と子 (StaggerItem) で許容するタグ集合は意図的に
+// 異なる: 親は section/ul/ol などレイアウト寄り、子は article/li など
+// 内容寄りを想定しているため。共通エイリアスを敢えて切らず、各 prop
+// 定義で独立させて a11y 上の整合性 (例: <ul> → <li>) を型レベルで促す。
 type StaggerTag = "div" | "section" | "article" | "ul" | "ol" | "header";
 
 const PARENT_MOTION_TAGS = {
@@ -35,6 +39,8 @@ interface StaggerChildrenProps {
   /** ラップ要素のタグ。リストとして使うときは "ul"/"ol" を指定 */
   as?: StaggerTag;
   className?: string;
+  /** リストとして使うときの a11y ラベル（as="ul"/"ol" 想定） */
+  "aria-label"?: string;
 }
 
 /**
@@ -48,12 +54,17 @@ export function StaggerChildren({
   once = true,
   as = "div",
   className,
+  "aria-label": ariaLabel,
 }: StaggerChildrenProps) {
   const reduced = useReducedMotion();
 
   if (reduced) {
     const Static = as;
-    return <Static className={className}>{children}</Static>;
+    return (
+      <Static className={className} aria-label={ariaLabel}>
+        {children}
+      </Static>
+    );
   }
 
   const Tag = PARENT_MOTION_TAGS[as];
@@ -61,6 +72,7 @@ export function StaggerChildren({
   return (
     <Tag
       className={className}
+      aria-label={ariaLabel}
       initial="hidden"
       whileInView="visible"
       viewport={{ once, margin: "-10%" }}
@@ -88,6 +100,8 @@ interface StaggerItemProps {
   /** ラップ要素のタグ。親が "ul" のときは "li" を指定すること */
   as?: StaggerItemTag;
   className?: string;
+  /** 必要に応じて伝播させる a11y ラベル */
+  "aria-label"?: string;
 }
 
 /**
@@ -101,12 +115,17 @@ export function StaggerItem({
   duration = 0.6,
   as = "div",
   className,
+  "aria-label": ariaLabel,
 }: StaggerItemProps) {
   const reduced = useReducedMotion();
 
   if (reduced) {
     const Static = as;
-    return <Static className={className}>{children}</Static>;
+    return (
+      <Static className={className} aria-label={ariaLabel}>
+        {children}
+      </Static>
+    );
   }
 
   const Tag = ITEM_MOTION_TAGS[as];
@@ -114,6 +133,7 @@ export function StaggerItem({
   return (
     <Tag
       className={className}
+      aria-label={ariaLabel}
       variants={{
         hidden: { opacity: 0, y },
         visible: {
