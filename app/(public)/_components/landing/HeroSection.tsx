@@ -1,0 +1,66 @@
+import Link from "next/link";
+import { CalendarIcon, PlusIcon } from "@/components/ui/icons";
+
+/**
+ * トップ LP のヒーロー。後続 PR で WebGL シーンに差し替えるため、
+ * 装飾領域は data-hero-canvas でマーキングしている。
+ */
+export function HeroSection() {
+  return (
+    <section className="relative isolate flex min-h-[100svh] flex-col items-center justify-center overflow-hidden bg-denim-dark px-6 py-24 text-center dark:bg-canvas">
+      {/* WebGL 差し替えターゲット。今は無地 */}
+      <div
+        data-hero-canvas
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10"
+      />
+
+      {/* 上部タグライン */}
+      <p className="mb-6 inline-flex items-center gap-3 text-2xs font-medium tracking-[0.4em] text-offwhite/40 uppercase">
+        <span className="h-px w-8 bg-offwhite/30" />
+        Vintage Clothing × AI × Diary
+        <span className="h-px w-8 bg-offwhite/30" />
+      </p>
+
+      <p className="mb-2 text-xs font-medium tracking-[0.3em] text-denim-light uppercase">
+        Outfit Of The Day
+      </p>
+
+      <h1 className="font-display text-[clamp(5rem,20vw,14rem)] leading-none tracking-widest text-offwhite">
+        DIG.
+      </h1>
+
+      <p className="mt-6 max-w-sm text-sm leading-relaxed text-offwhite/60 sm:max-w-md sm:text-base">
+        古着を、掘る。
+        <br className="sm:hidden" />
+        今日の一着を、残せ。
+      </p>
+
+      <div className="mt-12 flex flex-col items-center gap-3 sm:flex-row sm:gap-4">
+        <Link
+          href="/ootd/new"
+          className="inline-flex min-w-[12rem] items-center justify-center gap-2 rounded-none border border-offwhite bg-offwhite px-6 py-3 text-sm font-medium tracking-widest text-denim-dark uppercase transition-colors hover:bg-transparent hover:text-offwhite focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offwhite focus-visible:ring-offset-2 focus-visible:ring-offset-denim-dark"
+        >
+          <PlusIcon width={16} height={16} />
+          コーデを記録
+        </Link>
+        <Link
+          href="/ootd"
+          className="inline-flex min-w-[12rem] items-center justify-center gap-2 rounded-none border border-offwhite/30 bg-transparent px-6 py-3 text-sm font-medium tracking-widest text-offwhite/70 uppercase transition-colors hover:border-offwhite hover:text-offwhite focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offwhite focus-visible:ring-offset-2 focus-visible:ring-offset-denim-dark"
+        >
+          <CalendarIcon width={16} height={16} />
+          一覧を見る
+        </Link>
+      </div>
+
+      {/* スクロール誘発インジケータ */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-2xs tracking-[0.4em] text-offwhite/40 uppercase">
+        <span className="block">Scroll</span>
+        <span
+          aria-hidden="true"
+          className="mx-auto mt-2 block h-8 w-px bg-offwhite/30"
+        />
+      </div>
+    </section>
+  );
+}
