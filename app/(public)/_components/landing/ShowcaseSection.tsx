@@ -34,8 +34,11 @@ export function ShowcaseSection() {
     <section className="relative overflow-hidden bg-offwhite-subtle px-6 py-24 dark:bg-canvas-subtle sm:py-32">
       <div className="mx-auto max-w-6xl">
         <header className="mb-16 flex flex-col items-center text-center sm:mb-20">
-          <p className="mb-3 text-2xs font-medium tracking-[0.4em] text-denim/50 dark:text-offwhite/40 uppercase">
-            — Showcase —
+          <p
+            aria-label="Showcase"
+            className="mb-3 text-2xs font-medium tracking-[0.4em] text-denim/50 dark:text-offwhite/40 uppercase"
+          >
+            <span aria-hidden="true">— Showcase —</span>
           </p>
           <h2 className="font-display text-4xl tracking-widest text-denim-dark dark:text-offwhite sm:text-5xl">
             アーカイブの断片。

@@ -5,8 +5,11 @@ export function CtaSection() {
   return (
     <section className="relative overflow-hidden bg-denim-dark px-6 py-24 text-center dark:bg-canvas sm:py-32">
       <div className="mx-auto max-w-2xl">
-        <p className="mb-3 text-2xs font-medium tracking-[0.4em] text-offwhite/40 uppercase">
-          — Start Digging —
+        <p
+          aria-label="Start Digging"
+          className="mb-3 text-2xs font-medium tracking-[0.4em] text-offwhite/40 uppercase"
+        >
+          <span aria-hidden="true">— Start Digging —</span>
         </p>
         <h2 className="font-display text-4xl tracking-widest text-offwhite sm:text-6xl">
           始めよう。

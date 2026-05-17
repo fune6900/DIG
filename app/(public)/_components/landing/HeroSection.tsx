@@ -7,7 +7,7 @@ import { CalendarIcon, PlusIcon } from "@/components/ui/icons";
  */
 export function HeroSection() {
   return (
-    <section className="relative isolate flex min-h-[100svh] flex-col items-center justify-center overflow-hidden bg-denim-dark px-6 py-24 text-center dark:bg-canvas">
+    <section className="relative isolate flex min-h-[calc(100svh-3.25rem)] flex-col items-center justify-center overflow-hidden bg-denim-dark px-6 py-24 text-center dark:bg-canvas">
       {/* WebGL 差し替えターゲット。今は無地 */}
       <div
         data-hero-canvas
@@ -17,9 +17,9 @@ export function HeroSection() {
 
       {/* 上部タグライン */}
       <p className="mb-6 inline-flex items-center gap-3 text-2xs font-medium tracking-[0.4em] text-offwhite/40 uppercase">
-        <span className="h-px w-8 bg-offwhite/30" />
+        <span aria-hidden="true" className="h-px w-8 bg-offwhite/30" />
         Vintage Clothing × AI × Diary
-        <span className="h-px w-8 bg-offwhite/30" />
+        <span aria-hidden="true" className="h-px w-8 bg-offwhite/30" />
       </p>
 
       <p className="mb-2 text-xs font-medium tracking-[0.3em] text-denim-light uppercase">
@@ -53,8 +53,8 @@ export function HeroSection() {
         </Link>
       </div>
 
-      {/* スクロール誘発インジケータ */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-2xs tracking-[0.4em] text-offwhite/40 uppercase">
+      {/* スクロール誘発インジケータ。SP は BottomNav (約 5rem) を避けて bottom を退避 */}
+      <div className="absolute bottom-[calc(5rem+1.5rem)] left-1/2 -translate-x-1/2 text-2xs tracking-[0.4em] text-offwhite/40 uppercase md:bottom-8">
         <span className="block">Scroll</span>
         <span
           aria-hidden="true"

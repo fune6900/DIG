@@ -25,8 +25,11 @@ export function ConceptSection() {
       <div className="mx-auto max-w-5xl">
         {/* セクションヘッダー */}
         <header className="mb-16 flex flex-col items-center text-center sm:mb-24">
-          <p className="mb-3 text-2xs font-medium tracking-[0.4em] text-denim/50 dark:text-offwhite/40 uppercase">
-            — Concept —
+          <p
+            aria-label="Concept"
+            className="mb-3 text-2xs font-medium tracking-[0.4em] text-denim/50 dark:text-offwhite/40 uppercase"
+          >
+            <span aria-hidden="true">— Concept —</span>
           </p>
           <h2 className="font-display text-4xl tracking-widest text-denim-dark dark:text-offwhite sm:text-5xl md:text-6xl">
             古着は、宝探しだ。

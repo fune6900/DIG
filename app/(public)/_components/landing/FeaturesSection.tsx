@@ -36,8 +36,11 @@ export function FeaturesSection() {
     <section className="relative overflow-hidden bg-denim-dark px-6 py-24 text-offwhite dark:bg-canvas sm:py-32">
       <div className="mx-auto max-w-5xl">
         <header className="mb-16 flex flex-col items-center text-center sm:mb-20">
-          <p className="mb-3 text-2xs font-medium tracking-[0.4em] text-offwhite/40 uppercase">
-            — Features —
+          <p
+            aria-label="Features"
+            className="mb-3 text-2xs font-medium tracking-[0.4em] text-offwhite/40 uppercase"
+          >
+            <span aria-hidden="true">— Features —</span>
           </p>
           <h2 className="font-display text-4xl tracking-widest sm:text-5xl">
             掘る、試す、残す。
