@@ -23,7 +23,7 @@ export default function ConditionsPage() {
       </Link>
 
       {/* 見出し */}
-      <h1 className="mb-6 text-xl font-bold tracking-wide text-canvas-fg dark:text-offwhite">
+      <h1 className="mb-6 text-xl font-bold tracking-wide text-denim-dark dark:text-offwhite">
         こだわり条件
       </h1>
 

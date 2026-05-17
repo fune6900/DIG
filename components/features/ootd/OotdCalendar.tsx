@@ -121,7 +121,7 @@ export function OotdCalendar({ ootds, onSelect }: OotdCalendarProps) {
     <div className="space-y-6">
       {/* 1段目: 今日の曜日と日付 */}
       <header className="space-y-1">
-        <p className="text-[11px] font-medium tracking-[0.3em] uppercase text-denim/40 dark:text-offwhite/30">
+        <p className="text-xs font-medium tracking-[0.3em] uppercase text-denim/40 dark:text-offwhite/30">
           Today
         </p>
         <h2 className="font-display text-2xl sm:text-3xl tracking-widest text-denim-dark dark:text-offwhite">
@@ -154,7 +154,7 @@ export function OotdCalendar({ ootds, onSelect }: OotdCalendarProps) {
               </span>
               <span
                 className={[
-                  "text-[10px] font-medium tracking-wider uppercase leading-none",
+                  "text-2xs font-medium tracking-wider uppercase leading-none",
                   isToday
                     ? "text-denim dark:text-offwhite"
                     : "text-denim/30 dark:text-offwhite/20",
@@ -165,7 +165,7 @@ export function OotdCalendar({ ootds, onSelect }: OotdCalendarProps) {
               <span
                 aria-hidden="true"
                 className={[
-                  "h-1.5 leading-none text-[10px]",
+                  "h-1.5 leading-none text-2xs",
                   isToday
                     ? "text-denim dark:text-offwhite"
                     : "text-transparent",
