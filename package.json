@@ -18,6 +18,8 @@
     "@google/generative-ai": "^0.24.1",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@supabase/supabase-js": "^2.105.1",
     "@tanstack/react-query": "^5.99.0",
     "heic-convert": "^2.1.0",
@@ -28,6 +30,7 @@
     "react-dom": "^19.0.0",
     "recharts": "^2.15.3",
     "sharp": "^0.34.5",
+    "three": "^0.184.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -43,6 +46,7 @@
     "@types/react-dom": "^19",
     "@types/sharp": "^0.31.1",
     "@types/testing-library__jest-dom": "^5.14.9",
+    "@types/three": "^0.184.1",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^9",
     "eslint-config-next": "^16.2.3",

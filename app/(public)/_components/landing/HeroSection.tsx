@@ -1,19 +1,24 @@
 import Link from "next/link";
 import { CalendarIcon, PlusIcon } from "@/components/ui/icons";
+import { HeroCanvasLazy } from "@/components/features/landing/HeroCanvasLazy";
 
 /**
- * トップ LP のヒーロー。後続 PR で WebGL シーンに差し替えるため、
- * 装飾領域は data-hero-canvas でマーキングしている。
+ * トップ LP のヒーロー。背景に WebGL シーン (D + シャベル 3D) を
+ * 重ねるが、CTA テキストの可読性のため WebGL レイヤは半透明オーバーレイ
+ * を間に挟む。
  */
 export function HeroSection() {
   return (
     <section className="relative isolate flex min-h-[calc(100svh-3.25rem)] flex-col items-center justify-center overflow-hidden bg-denim-dark px-6 py-24 text-center dark:bg-canvas">
-      {/* WebGL 差し替えターゲット。今は無地 */}
-      <div
-        data-hero-canvas
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10"
-      />
+      {/* WebGL レイヤ（dynamic + IO で遅延ロード、reduced-motion で完全 OFF） */}
+      <div data-hero-canvas className="absolute inset-0 -z-10">
+        <HeroCanvasLazy />
+        {/* CTA とコピーの読みやすさ確保のための薄いオーバーレイ */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-denim-dark/40 dark:bg-canvas/50"
+        />
+      </div>
 
       {/* 上部タグライン */}
       <p className="mb-6 inline-flex items-center gap-3 text-2xs font-medium tracking-[0.4em] text-offwhite/40 uppercase">
