@@ -1,3 +1,5 @@
+import { FadeIn, StaggerChildren, StaggerItem } from "@/components/ui/motion";
+
 const CONCEPT_PILLARS = [
   {
     no: "01",
@@ -24,7 +26,10 @@ export function ConceptSection() {
     <section className="relative overflow-hidden bg-offwhite px-6 py-24 dark:bg-canvas-subtle sm:py-32">
       <div className="mx-auto max-w-5xl">
         {/* セクションヘッダー */}
-        <header className="mb-16 flex flex-col items-center text-center sm:mb-24">
+        <FadeIn
+          as="header"
+          className="mb-16 flex flex-col items-center text-center sm:mb-24"
+        >
           <p
             aria-label="Concept"
             className="mb-3 text-2xs font-medium tracking-[0.4em] text-denim/50 dark:text-offwhite/40 uppercase"
@@ -41,13 +46,14 @@ export function ConceptSection() {
             <br className="hidden sm:inline" />
             それが、ヴィンテージを着るということ。
           </p>
-        </header>
+        </FadeIn>
 
         {/* 3 つの柱 */}
-        <div className="grid grid-cols-1 gap-px bg-denim/10 dark:bg-offwhite/10 sm:grid-cols-3">
+        <StaggerChildren className="grid grid-cols-1 gap-px bg-denim/10 dark:bg-offwhite/10 sm:grid-cols-3">
           {CONCEPT_PILLARS.map((pillar) => (
-            <article
+            <StaggerItem
               key={pillar.no}
+              as="article"
               className="flex flex-col gap-3 bg-offwhite p-8 dark:bg-canvas-subtle sm:p-10"
             >
               <span className="font-display text-3xl tracking-widest text-denim/30 dark:text-offwhite/30">
@@ -62,9 +68,9 @@ export function ConceptSection() {
               <p className="text-sm leading-relaxed text-denim/70 dark:text-offwhite/60">
                 {pillar.desc}
               </p>
-            </article>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerChildren>
       </div>
     </section>
   );
