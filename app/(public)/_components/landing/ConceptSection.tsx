@@ -3,21 +3,21 @@ import { FadeIn, StaggerChildren, StaggerItem } from "@/components/ui/motion";
 const CONCEPT_PILLARS = [
   {
     no: "01",
-    label: "KNOWLEDGE",
-    title: "ナレッジで掘る",
-    desc: "ブランドタグ、ジッパー、縫製ディテール。古着は、年代を読み解くゲーム。",
+    label: "CAPTURE",
+    title: "撮って、残す",
+    desc: "今日の一着を一枚に。気分・場所・温度感と一緒に、その日のスタイルを記録する。",
   },
   {
     no: "02",
-    label: "TRY-ON",
-    title: "AI で試す",
-    desc: "通販で試着できない古着も、AI が袖を通したシルエットを見せてくれる。",
+    label: "ANALYZE",
+    title: "AI が読み解く",
+    desc: "色、シルエット、印象。AI が言語化して、自分でも気づかなかったスタイルの輪郭を可視化する。",
   },
   {
     no: "03",
-    label: "DIARY",
-    title: "日々を残す",
-    desc: "今日の一着を、明日の自分のために。カレンダーで振り返るコーデ日記。",
+    label: "RETURN",
+    title: "過去に戻る",
+    desc: "シール手帳とカレンダーの 2 ビューで、積み重ねた毎日を掘り返す。",
   },
 ] as const;
 
@@ -37,14 +37,14 @@ export function ConceptSection() {
             <span aria-hidden="true">— Concept —</span>
           </p>
           <h2 className="font-display text-4xl tracking-widest text-denim-dark dark:text-offwhite sm:text-5xl md:text-6xl">
-            古着は、宝探しだ。
+            今日の一着が、地図になる。
           </h2>
           <p className="mt-6 max-w-xl text-sm leading-relaxed text-denim/70 dark:text-offwhite/60 sm:text-base">
-            タグの 1 行、ジッパーの刻印、縫い目の方向。
+            撮って、読んで、振り返る。
             <br className="hidden sm:inline" />
-            手がかりを集めて、過去のディテールを掘り当てる。
+            日々のコーデを積み重ねるほど、
             <br className="hidden sm:inline" />
-            それが、ヴィンテージを着るということ。
+            自分のスタイルの輪郭が掘り起こされていく。
           </p>
         </FadeIn>
 

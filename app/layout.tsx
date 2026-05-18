@@ -21,8 +21,38 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "DIG - 今日のコーデ記録",
-  description: "AI分析でコーデを記録・振り返るプラットフォーム",
+  title: {
+    default: "DIG - 今日のコーデを掘り起こす",
+    template: "%s | DIG",
+  },
+  description:
+    "AI 分析でスタイルを記録・振り返るコーデ日記アプリ。撮って、読んで、探す。毎日の一着を、未来の自分のために残す。",
+  keywords: [
+    "コーデ",
+    "ファッション",
+    "OOTD",
+    "コーデ日記",
+    "AI",
+    "スタイル分析",
+    "コーデカレンダー",
+    "DIG",
+  ],
+  applicationName: "DIG",
+  authors: [{ name: "DIG" }],
+  openGraph: {
+    type: "website",
+    locale: "ja_JP",
+    siteName: "DIG",
+    title: "DIG - 今日のコーデを掘り起こす",
+    description:
+      "AI 分析でスタイルを記録・振り返るコーデ日記アプリ。毎日の一着を、未来の自分のために残す。",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DIG - 今日のコーデを掘り起こす",
+    description:
+      "AI 分析でスタイルを記録・振り返るコーデ日記アプリ。毎日の一着を、未来の自分のために残す。",
+  },
 };
 
 export default function RootLayout({

@@ -16,9 +16,9 @@ export function CtaSection() {
           始めよう。
         </h2>
         <p className="mt-6 text-sm leading-relaxed text-offwhite/60 sm:text-base">
-          古着が好きな全ての人へ。
+          服が好きな全ての人へ。
           <br className="sm:hidden" />
-          DIG で、今日の一着を残す。
+          DIG で、今日の一着を未来に残す。
         </p>
 
         <StaggerChildren

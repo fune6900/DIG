@@ -4,29 +4,29 @@ import { FadeIn, StaggerChildren, StaggerItem } from "@/components/ui/motion";
 // 今は CSS グラデーションのプレースホルダタイルで構成する。
 const SHOWCASE_TILES = [
   {
-    era: "1970s",
-    style: "Workwear",
+    mood: "MINIMAL",
+    style: "Monotone",
     grad: "from-denim-dark via-denim to-denim-light",
   },
   {
-    era: "1980s",
-    style: "Military",
+    mood: "STATEMENT",
+    style: "Color",
     grad: "from-canvas via-denim-dark to-rust",
   },
-  { era: "1990s", style: "Streetwear", grad: "from-denim to-canvas" },
+  { mood: "DAILY", style: "Casual", grad: "from-denim to-canvas" },
   {
-    era: "1990s",
-    style: "Outdoor",
+    mood: "LAYER",
+    style: "Layering",
     grad: "from-denim-light via-offwhite-subtle to-denim",
   },
   {
-    era: "1960s",
-    style: "Americana",
+    mood: "EARTH",
+    style: "Outdoor",
     grad: "from-rust via-rust-light to-offwhite-subtle",
   },
   {
-    era: "2000s",
-    style: "Y2K",
+    mood: "STREET",
+    style: "Edge",
     grad: "from-canvas-subtle via-denim to-denim-light",
   },
 ] as const;
@@ -49,7 +49,7 @@ export function ShowcaseSection() {
             アーカイブの断片。
           </h2>
           <p className="mt-6 max-w-xl text-sm leading-relaxed text-denim/70 dark:text-offwhite/60 sm:text-base">
-            記録されたコーデから、年代とスタイルの片鱗を覗き見る。
+            記録されたコーデから、スタイルとムードの片鱗を覗き見る。
           </p>
         </FadeIn>
 
@@ -61,7 +61,7 @@ export function ShowcaseSection() {
         >
           {SHOWCASE_TILES.map((tile, idx) => (
             <StaggerItem
-              key={`${tile.era}-${tile.style}-${idx}`}
+              key={`${tile.mood}-${tile.style}-${idx}`}
               as="li"
               className="group relative aspect-[3/4] overflow-hidden border border-denim/10 dark:border-offwhite/10"
             >
@@ -72,7 +72,7 @@ export function ShowcaseSection() {
               <div className="absolute inset-0 bg-canvas/20 transition-colors group-hover:bg-canvas/40" />
               <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1 p-4">
                 <span className="text-2xs font-medium tracking-[0.3em] text-offwhite/70 uppercase">
-                  {tile.era}
+                  {tile.mood}
                 </span>
                 <span className="font-display text-xl tracking-widest text-offwhite sm:text-2xl">
                   {tile.style}
