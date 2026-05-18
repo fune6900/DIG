@@ -98,6 +98,33 @@ export async function updateSnap(
   return prisma.snap.update({ where: { id }, data }) as Promise<Snap>;
 }
 
+/**
+ * Snap テーブルから ORDER BY RANDOM() で limit 件をランダム抽出する。
+ * LP の Showcase で使用し、Unsplash の rate limit に依存せず「毎回別画像」
+ * 要件を満たす。limit は 50 で clamp する。
+ */
+export async function findRandomSnaps(limit: number): Promise<SnapSummary[]> {
+  const safeLimit = Math.min(Math.floor(limit), 50);
+  if (safeLimit <= 0) return [];
+
+  const rows = await prisma.$queryRaw<
+    Array<{
+      id: string;
+      imageUrl: string;
+      authorName: string | null;
+      sourceUrl: string;
+      source: string;
+    }>
+  >`
+    SELECT id, "imageUrl", "authorName", "sourceUrl", source
+    FROM "Snap"
+    ORDER BY RANDOM()
+    LIMIT ${safeLimit}
+  `;
+
+  return rows.map(normalizeSummary);
+}
+
 export async function findSimilarSnaps(params: {
   snapId: string;
   searchQueries: string[];
