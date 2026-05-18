@@ -12,7 +12,7 @@ const FEATURES = [
     no: "F-01",
     label: "RECORD",
     ja: "記録する",
-    desc: "今日のコーデを撮って、AI 分析でスタイル・カラー・年代をタグ付け。",
+    desc: "今日のコーデを撮って、AI 分析でスタイル・カラー・印象を自動タグ付け。",
     href: "/ootd/new",
     cta: "コーデを記録する",
     Icon: PlusIcon,
@@ -52,10 +52,10 @@ export function FeaturesSection() {
             <span aria-hidden="true">— Features —</span>
           </p>
           <h2 className="font-display text-4xl tracking-widest sm:text-5xl">
-            掘る、試す、残す。
+            残す、見返す、探す。
           </h2>
           <p className="mt-6 max-w-xl text-sm leading-relaxed text-offwhite/60 sm:text-base">
-            3 つの機能で、古着との付き合い方を再発明する。
+            3 つの機能で、毎日のコーデを未来に残す。
           </p>
         </FadeIn>
 

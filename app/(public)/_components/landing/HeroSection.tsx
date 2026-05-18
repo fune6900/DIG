@@ -23,7 +23,7 @@ export function HeroSection() {
       {/* 上部タグライン */}
       <p className="mb-6 inline-flex items-center gap-3 text-2xs font-medium tracking-[0.4em] text-offwhite/40 uppercase">
         <span aria-hidden="true" className="h-px w-8 bg-offwhite/30" />
-        Vintage Clothing × AI × Diary
+        Outfit × AI × Diary
         <span aria-hidden="true" className="h-px w-8 bg-offwhite/30" />
       </p>
 
@@ -36,9 +36,9 @@ export function HeroSection() {
       </h1>
 
       <p className="mt-6 max-w-sm text-sm leading-relaxed text-offwhite/60 sm:max-w-md sm:text-base">
-        古着を、掘る。
+        今日の一着を、掘る。
         <br className="sm:hidden" />
-        今日の一着を、残せ。
+        明日の自分のために、残す。
       </p>
 
       <div className="mt-12 flex flex-col items-center gap-3 sm:flex-row sm:gap-4">

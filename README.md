@@ -1,6 +1,46 @@
 # DIG（ディグ）
 
-今日のコーデを記録・振り返るプラットフォーム。AI分析でスタイル・カラー・アイテムを自動抽出。
+今日のコーデを掘り起こす、AI コーデ日記アプリ。撮って、読んで、探す。毎日の一着を、未来の自分のために残す。
+
+![Lint](https://img.shields.io/badge/lint-passing-success)
+![Type Check](https://img.shields.io/badge/typecheck-passing-success)
+![Build](https://img.shields.io/badge/build-passing-success)
+
+---
+
+## 機能
+
+- **#OOTD**: 今日のコーデを 1 枚に。撮って、タグ付けて、シール手帳・カレンダーで振り返る
+- **AI コーデ分析**: スタイル・カラー・印象・6 軸評価（カジュアル / 落ち着き / さりげなさ / フォーマル / 存在感 / カラフル）を自動生成
+- **着こなし検索**: キーワード / 画像 / スタイル × カラーで、他のコーデを掘る
+- **画像最適化**: HEIC 対応・クライアント圧縮・Supabase Storage への直接アップロード
+
+---
+
+## 技術スタック
+
+- **Core**: Next.js 16 (App Router), React 19, Tailwind CSS v4
+- **State**: TanStack Query v5
+- **Database**: Prisma 7 (PostgreSQL) / Supabase
+- **Storage**: Supabase Storage（ローカルは `public/uploads/` フォールバック）
+- **AI**: Gemini（コーデ分析）
+- **Validation**: TypeScript, Zod v4
+- **Motion**: motion (Framer Motion 後継) + three.js (WebGL ヒーロー)
+- **Testing**: Vitest, React Testing Library, Playwright
+- **CI/CD**: GitHub Actions, Vercel
+
+---
+
+## 開発コマンド
+
+```bash
+npm run dev        # 開発サーバー起動
+npm run build      # 本番ビルド
+npm run lint       # ESLint
+npm run typecheck  # 型チェック
+npm test           # ユニットテスト（Vitest）
+npm run e2e        # E2Eテスト（Playwright）
+```
 
 ---
 
@@ -115,10 +155,7 @@
 
 - `EvaluationRadar` スキーマを追加（casual / subdued / presence / subtle / formal / colorful の0〜100 スコア）。`Ootd` / `OotdAnalysisResult` / `CreateOotdInput` に optional で組み込み
 - Prisma `Ootd` モデルに `radarScores Json?` を追加（既存レコードは null 許容）
-- `services/ai-analysis.ts` のプロンプトを Notion 出典の few-shot に刷新
-  - `そのコーデを一言で表した言葉.md` の語彙・文学的トーンを `oneLiner` に継承
-  - `コーデを構成する説明文（DESCRIPTION）.md` の分析的・サブカル参照スタイルを `description` に継承
-  - 同時に 6 軸 `radarScores` を生成するよう指示
+- `services/ai-analysis.ts` のプロンプトを Notion 出典の few-shot に刷新（語彙・トーンを内部資料から継承、6 軸 `radarScores` を同時生成）
 - 新規 OOTD 登録フローで `radarScores` を `createOotdAction` にそのまま転送
 - `EvaluationRadarSchema` に対するスキーマテストを追加
 
@@ -140,47 +177,15 @@
 
 ### v0.5.0 — 2026-04-25
 
-**#OOTD中心への再構成 + ボトムナビ + デバイス別起動画面**
+**#OOTD 中心への再構成 + ボトムナビ + デバイス別起動画面**
 
-- 古着図鑑・年代判別・マイ図鑑機能を全削除（route・component・service・types・hook・lib・test 一括）
+- 旧ナレッジ系機能（旧ブランド図鑑 / 年代判別 / マイ図鑑）を全削除し、#OOTD と着こなし検索の 2 軸に集約（route・component・service・types・hook・lib・test 一括）
 - 起動画面を device-aware 化: PC=トップ、SP=`/ootd`（`proxy.ts` UA判定 + クライアント側 `MobileRedirect` フォールバック）
 - SP専用ボトムナビゲーション追加（左:着こなし検索 / 中央:+OOTD追加 / 右:自分=OOTD一覧）。`/ootd/new` では非表示
 - 共通アイコンライブラリ `components/ui/icons.tsx` を導入し、全アクションボタンの左横にアイコンを付与
 - ルートレベルローディング追加（`app/loading.tsx`、`app/(public)/ootd/loading.tsx`、`app/(public)/ootd/[id]/loading.tsx`）+ `Spinner` の size/variant 対応 + `FullScreenLoader`
 - 着こなし検索の仮ページ `/search` を追加
-- Prismaから `Knowledge` モデルを削除
-
----
-
-### v0.4.0 — 2026-04-14
-
-**ナレッジ更新Skill + Notion連携**
-
-- `/knowledge-update` スラッシュコマンドを追加。ブランド・年代・ディテール情報を対話形式で収集
-- `.claude/knowledge-base/brands/<ブランド名>.md` にMarkdown形式でローカル保存
-- Notion MCPで古着図鑑ナレッジベースページ（`34218002-901a-8195-93b9-df0e88c875dd`）に自動同期
-- `.env.example` に `NOTION_KNOWLEDGE_PAGE_ID` を追加
-
----
-
-### v0.3.0 — 2026-04-15
-
-**ブックマーク（マイ図鑑）**
-
-- `/knowledge/[id]` — ★ブックマークボタンを追加。ローカルストレージに保存
-- `/knowledge/bookmarks` — 保存したナレッジを一覧表示する「マイ図鑑」ページを追加
-- 認証不要。将来的な DB 永続化に対応できる設計
-
----
-
-### v0.2.0 — 2026-04-14
-
-**古着図鑑（ナレッジ検索）**
-
-- `/knowledge` — ブランド・年代・カテゴリ・フリーワードで古着アイテムを検索
-- `/knowledge/[id]` — 年代識別ポイント（タグ・縫製・素材・シルエット・ディテール）の詳細表示
-- ページネーション対応
-- 共通UIコンポーネント追加（Badge, Card, Spinner, Pagination）
+- Prisma から旧 `Knowledge` モデルを削除
 
 ---
 
@@ -193,25 +198,3 @@
 - GitHub Actions CI（Lint / Type Check / Build）
 - Vercel デプロイ設定
 - CodeRabbit 日本語レビュー設定
-
----
-
-## 技術スタック
-
-- **Core**: Next.js (App Router), React, Tailwind CSS v4
-- **State**: TanStack Query v5
-- **Database**: Prisma 7 (PostgreSQL) / Supabase
-- **Validation**: TypeScript, Zod v4
-- **Testing**: Vitest, React Testing Library, Playwright
-- **CI/CD**: GitHub Actions, Vercel
-
-## 開発コマンド
-
-```bash
-npm run dev        # 開発サーバー起動
-npm run build      # 本番ビルド
-npm run lint       # ESLint
-npm run typecheck  # 型チェック
-npm test           # ユニットテスト（Vitest）
-npm run e2e        # E2Eテスト（Playwright）
-```
