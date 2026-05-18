@@ -40,7 +40,12 @@ const SHOWCASE_TILES = [
 ] as const;
 
 export async function ShowcaseSection() {
-  const snaps = await findRandomSnaps(SHOWCASE_TILES.length).catch(() => []);
+  const snaps = await findRandomSnaps(SHOWCASE_TILES.length).catch(
+    (err: unknown) => {
+      console.error("[ShowcaseSection] findRandomSnaps failed", err);
+      return [];
+    },
+  );
 
   return (
     <section className="relative overflow-hidden bg-offwhite-subtle px-6 py-24 dark:bg-canvas-subtle sm:py-32">
