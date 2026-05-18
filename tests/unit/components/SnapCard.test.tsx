@@ -17,6 +17,7 @@ const mockSnap: SnapSummary = {
   imageUrl: "https://images.unsplash.com/photo-abc/regular",
   authorName: "Jane Doe",
   sourceUrl: "https://unsplash.com/photos/photo-abc",
+  source: "unsplash",
 };
 
 const mockSnapNoAuthor: SnapSummary = {
@@ -24,6 +25,15 @@ const mockSnapNoAuthor: SnapSummary = {
   imageUrl: "https://images.unsplash.com/photo-xyz/regular",
   authorName: null,
   sourceUrl: "https://unsplash.com/photos/photo-xyz",
+  source: "unsplash",
+};
+
+const mockSnapPexels: SnapSummary = {
+  id: "snap-uuid-3",
+  imageUrl: "https://images.pexels.com/photos/123/large.jpg",
+  authorName: "Sample Photographer",
+  sourceUrl: "https://www.pexels.com/photo/sample-123/",
+  source: "pexels",
 };
 
 // ---------------------------------------------------------------------------
@@ -89,5 +99,21 @@ describe("SnapCard", () => {
     expect(
       screen.queryByText("https://unsplash.com/photos/photo-abc"),
     ).not.toBeInTheDocument();
+  });
+
+  describe("ソースバッジ", () => {
+    it("source='unsplash' のとき 'Unsplash' バッジが表示される", () => {
+      render(<SnapCard snap={mockSnap} />);
+      const badge = screen.getByTestId("snap-source-badge");
+      expect(badge).toHaveTextContent("Unsplash");
+    });
+
+    it("source='pexels' のとき UI 表記は 'Pinterest' になる", () => {
+      render(<SnapCard snap={mockSnapPexels} />);
+      const badge = screen.getByTestId("snap-source-badge");
+      expect(badge).toHaveTextContent("Pinterest");
+      // 内部実装名 "Pexels" が漏れていないこと
+      expect(badge).not.toHaveTextContent("Pexels");
+    });
   });
 });

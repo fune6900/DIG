@@ -2,8 +2,56 @@
 
 import { SnapSearchInputSchema } from "@/types/snap";
 import type { SnapSummary } from "@/types/snap";
-import { findSnapsByQuery, upsertSnaps } from "@/services/snap-service";
+import {
+  findSnapsByQuery,
+  upsertPexelsSnaps,
+  upsertSnaps,
+} from "@/services/snap-service";
 import { searchUnsplashPhotos } from "@/services/unsplash-service";
+import { searchPexelsPhotos } from "@/services/pexels-service";
+
+/**
+ * Unsplash と Pexels を Promise.allSettled で並列取得し、得られたものを DB
+ * にキャッシュする。両方失敗時は `fetchedFromApi=false`、片方成功時は
+ * 成功側の totalPages を採用する。
+ */
+async function fetchAndCacheFromSources(
+  query: string,
+  page: number,
+  pageSize: number,
+): Promise<{ fetchedFromApi: boolean; totalPages: number }> {
+  const [unsplashResult, pexelsResult] = await Promise.allSettled([
+    searchUnsplashPhotos({ query, page, perPage: pageSize }),
+    searchPexelsPhotos({ query, page, perPage: pageSize }),
+  ]);
+
+  let fetchedFromApi = false;
+  let totalPages = 0;
+
+  if (unsplashResult.status === "fulfilled") {
+    const { photos, totalPages: tp } = unsplashResult.value;
+    try {
+      await upsertSnaps(photos, query);
+      fetchedFromApi = true;
+      totalPages = Math.max(totalPages, tp);
+    } catch {
+      // DB 書き込み失敗は黙殺（後段 findSnapsByQuery で初回 items を返す）
+    }
+  }
+
+  if (pexelsResult.status === "fulfilled") {
+    const { photos, totalPages: tp } = pexelsResult.value;
+    try {
+      await upsertPexelsSnaps(photos, query);
+      fetchedFromApi = true;
+      totalPages = Math.max(totalPages, tp);
+    } catch {
+      // 同上
+    }
+  }
+
+  return { fetchedFromApi, totalPages };
+}
 
 type ActionResult<T> =
   | { data: T; error: null }
@@ -58,17 +106,14 @@ export async function searchSnapsAction(input: unknown): Promise<
 
       if (shouldFetchFromApi) {
         let items = initialItems;
-        let totalPages = 0;
-        let fetchedFromApi = false;
 
-        try {
-          const { photos, totalPages: tp } = await searchUnsplashPhotos({
-            query: query as string,
-            page,
-            perPage: pageSize,
-          });
-          totalPages = tp;
-          await upsertSnaps(photos, query as string);
+        const { fetchedFromApi, totalPages } = await fetchAndCacheFromSources(
+          query as string,
+          page,
+          pageSize,
+        );
+
+        if (fetchedFromApi) {
           items = await findSnapsByQuery({
             query,
             styles,
@@ -76,9 +121,6 @@ export async function searchSnapsAction(input: unknown): Promise<
             page,
             pageSize,
           });
-          fetchedFromApi = true;
-        } catch {
-          // Unsplash 失敗時は初回取得の items をそのまま使う
         }
 
         const hasMore = fetchedFromApi
@@ -125,21 +167,15 @@ export async function searchSnapsAction(input: unknown): Promise<
 
   if (shouldFetchFromApi) {
     let items = initialItems;
-    let totalPages = 0;
-    let fetchedFromApi = false;
 
-    try {
-      const { photos, totalPages: tp } = await searchUnsplashPhotos({
-        query: query as string,
-        page,
-        perPage: pageSize,
-      });
-      totalPages = tp;
-      await upsertSnaps(photos, query as string);
+    const { fetchedFromApi, totalPages } = await fetchAndCacheFromSources(
+      query as string,
+      page,
+      pageSize,
+    );
+
+    if (fetchedFromApi) {
       items = await findSnapsByQuery({ query, page, pageSize });
-      fetchedFromApi = true;
-    } catch {
-      // Unsplash 失敗時は初回取得の items をそのまま使う
     }
 
     const hasMore = fetchedFromApi

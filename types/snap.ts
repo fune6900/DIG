@@ -12,9 +12,16 @@ import { COLOR_CATEGORIES } from "@/lib/color-catalog";
 // 同じ enum を共有し、16 系統以外の値が DB / API 経由で混入するのを防ぐ。
 const ColorCategoryEnum = z.enum(COLOR_CATEGORIES);
 
+// 着こなし検索で取得元として使うサービス。
+// "pexels" は UI 上は "Pinterest" と表示する（ブランディング都合）が、
+// 内部実装・DB・型はすべて "pexels" で統一する。
+export const SNAP_SOURCES = ["unsplash", "pexels"] as const;
+export const SnapSourceEnum = z.enum(SNAP_SOURCES);
+export type SnapSource = z.infer<typeof SnapSourceEnum>;
+
 export const SnapSchema = z.object({
   id: z.string().uuid(),
-  source: z.string().min(1),
+  source: SnapSourceEnum,
   externalId: z.string().min(1),
   imageUrl: z.string().min(1),
   sourceUrl: z.string().min(1),
@@ -47,6 +54,7 @@ export const SnapSummarySchema = SnapSchema.pick({
   imageUrl: true,
   authorName: true,
   sourceUrl: true,
+  source: true,
 });
 export type SnapSummary = z.infer<typeof SnapSummarySchema>;
 

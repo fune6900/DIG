@@ -75,6 +75,7 @@ const makeSnap = (id: string): SnapSummary => ({
   imageUrl: `https://images.unsplash.com/${id}/regular`,
   authorName: "Test Author",
   sourceUrl: `https://unsplash.com/photos/${id}`,
+  source: "unsplash",
 });
 
 const SNAPS_3 = [makeSnap("a"), makeSnap("b"), makeSnap("c")];
