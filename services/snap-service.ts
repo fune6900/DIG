@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import {
@@ -96,6 +97,37 @@ export async function updateSnap(
   data: Prisma.SnapUpdateInput,
 ): Promise<Snap> {
   return prisma.snap.update({ where: { id }, data }) as Promise<Snap>;
+}
+
+/**
+ * Snap テーブルから ORDER BY RANDOM() で limit 件をランダム抽出する。
+ * LP の Showcase で使用し、Unsplash の rate limit に依存せず「毎回別画像」
+ * 要件を満たす。limit は 50 で clamp する（DoS 防御）。
+ *
+ * noStore() で本関数を呼ぶ route を dynamic 化する。これを呼ばないと Next.js
+ * のデフォルトで `/` が静的化され、ビルド時の 1 回しか抽出されなくなる。
+ */
+export async function findRandomSnaps(limit: number): Promise<SnapSummary[]> {
+  noStore();
+  const safeLimit = Math.min(Math.floor(limit), 50);
+  if (!Number.isFinite(safeLimit) || safeLimit <= 0) return [];
+
+  const rows = await prisma.$queryRaw<
+    Array<{
+      id: string;
+      imageUrl: string;
+      authorName: string | null;
+      sourceUrl: string;
+      source: string;
+    }>
+  >`
+    SELECT id, "imageUrl", "authorName", "sourceUrl", source
+    FROM "Snap"
+    ORDER BY RANDOM()
+    LIMIT ${safeLimit}
+  `;
+
+  return rows.map(normalizeSummary);
 }
 
 export async function findSimilarSnaps(params: {

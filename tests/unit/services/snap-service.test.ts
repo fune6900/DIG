@@ -14,11 +14,16 @@ vi.mock("@/lib/prisma", () => ({
       createMany: vi.fn(),
       update: vi.fn(),
     },
+    $queryRaw: vi.fn(),
   },
 }));
 
 import { prisma } from "@/lib/prisma";
-import { findSnapsByQuery, upsertSnaps } from "@/services/snap-service";
+import {
+  findRandomSnaps,
+  findSnapsByQuery,
+  upsertSnaps,
+} from "@/services/snap-service";
 import type { UnsplashPhoto } from "@/services/unsplash-service";
 
 // ---------------------------------------------------------------------------
@@ -307,5 +312,97 @@ describe("upsertSnaps", () => {
         },
       }),
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// findRandomSnaps（LP Showcase 用に DB から random ピック）
+// ---------------------------------------------------------------------------
+describe("findRandomSnaps", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("limit=0 のとき DB を叩かず空配列を返す", async () => {
+    const result = await findRandomSnaps(0);
+    expect(result).toEqual([]);
+    expect(prisma.$queryRaw).not.toHaveBeenCalled();
+  });
+
+  it("正常系: $queryRaw の戻りを SnapSummary[] にマッピングする", async () => {
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([
+      {
+        id: "snap-uuid-1",
+        imageUrl: "https://images.unsplash.com/photo-1/regular",
+        authorName: "John Doe",
+        sourceUrl: "https://unsplash.com/photos/photo-1",
+        source: "unsplash",
+      },
+      {
+        id: "snap-uuid-2",
+        imageUrl: "https://images.pexels.com/photos/2/large.jpg",
+        authorName: "Jane Photographer",
+        sourceUrl: "https://www.pexels.com/photo/2/",
+        source: "pexels",
+      },
+    ] as unknown as never);
+
+    const result = await findRandomSnaps(6);
+
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({
+      id: "snap-uuid-1",
+      imageUrl: "https://images.unsplash.com/photo-1/regular",
+      authorName: "John Doe",
+      sourceUrl: "https://unsplash.com/photos/photo-1",
+      source: "unsplash",
+    });
+    expect(result[1].source).toBe("pexels");
+  });
+
+  it("未知の source は 'unsplash' に正規化される（前方互換）", async () => {
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([
+      {
+        id: "snap-uuid-3",
+        imageUrl: "https://images.unsplash.com/photo-3/regular",
+        authorName: null,
+        sourceUrl: "https://unsplash.com/photos/photo-3",
+        source: "future-source",
+      },
+    ] as unknown as never);
+
+    const result = await findRandomSnaps(1);
+
+    expect(result[0].source).toBe("unsplash");
+  });
+
+  it("limit は 50 で clamp される（DoS 防御）", async () => {
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([] as unknown as never);
+
+    await findRandomSnaps(9999);
+
+    // template literal 第二引数 (values) に 50 が渡されること
+    const call = vi.mocked(prisma.$queryRaw).mock.calls[0];
+    expect(call).toBeDefined();
+    // Prisma の tagged template だと call[0]=strings, call[1...]=values
+    // 第 2 引数（最初のパラメータ）が clamp 後の 50 であること
+    expect(call[1]).toBe(50);
+  });
+
+  it("小数 limit は Math.floor される", async () => {
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([] as unknown as never);
+
+    await findRandomSnaps(3.7);
+
+    const call = vi.mocked(prisma.$queryRaw).mock.calls[0];
+    expect(call[1]).toBe(3);
+  });
+
+  it("$queryRaw が空配列を返したとき空配列を返す", async () => {
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([] as unknown as never);
+
+    const result = await findRandomSnaps(6);
+
+    expect(result).toEqual([]);
   });
 });
