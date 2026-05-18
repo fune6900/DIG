@@ -1,7 +1,36 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-import type { Snap, SnapSummary } from "@/types/snap";
+import {
+  SNAP_SOURCES,
+  type Snap,
+  type SnapSource,
+  type SnapSummary,
+} from "@/types/snap";
 import type { UnsplashPhoto } from "@/services/unsplash-service";
+import type { PexelsPhoto } from "@/services/pexels-service";
+
+// Prisma 側で source カラムは string 型のため、DB から読んだ値を SnapSourceEnum
+// に絞り込む型ガード。未知の source 値は呼び出し側で安全に "unsplash" などへ
+// 正規化する（既存レコードはすべて "unsplash" のため実害なし）。
+function isSnapSource(value: string): value is SnapSource {
+  return (SNAP_SOURCES as readonly string[]).includes(value);
+}
+
+function normalizeSummary(record: {
+  id: string;
+  imageUrl: string;
+  authorName: string | null;
+  sourceUrl: string;
+  source: string;
+}): SnapSummary {
+  return {
+    id: record.id,
+    imageUrl: record.imageUrl,
+    authorName: record.authorName,
+    sourceUrl: record.sourceUrl,
+    source: isSnapSource(record.source) ? record.source : "unsplash",
+  };
+}
 
 export async function findSnapsByQuery(params: {
   query?: string;
@@ -52,9 +81,10 @@ export async function findSnapsByQuery(params: {
       imageUrl: true,
       authorName: true,
       sourceUrl: true,
+      source: true,
     },
   });
-  return records;
+  return records.map(normalizeSummary);
 }
 
 export async function getSnapById(id: string): Promise<Snap | null> {
@@ -91,36 +121,63 @@ export async function findSimilarSnaps(params: {
       imageUrl: true,
       authorName: true,
       sourceUrl: true,
+      source: true,
     },
   });
 
-  return records;
+  return records.map(normalizeSummary);
 }
 
-/**
- * Unsplash から取得した写真群を Snap テーブルにキャッシュする。
- *
- * - 新規写真: `createMany({ skipDuplicates: true })` で 1 クエリにバルク INSERT
- *   （N 件並列 upsert を発行していた旧実装の DB コネクション枯渇リスクを解消）
- * - 既存写真: `searchQueries` に `query` が未登録のものだけ `update` で push
- *   （同一画像が別キーワードでヒットした履歴を保持し、過去キーワードからの
- *   再検索でも引き続き返るようにする）
- *
- * 競合: 別リクエストが同時に同 externalId を upsert する可能性は低いが、
- * `createMany.skipDuplicates` で重複は黙殺、`update.searchQueries.push` は
- * Prisma 内部で配列追記される。完全な原子性が必要になったら $transaction
- * （Interactive）に切り替える。
- */
-export async function upsertSnaps(
-  photos: UnsplashPhoto[],
+// ---------------------------------------------------------------------------
+// upsertSnaps: 取得元サービス（Unsplash / Pexels）から得た写真を Snap テーブル
+// にキャッシュする。source ごとに正規化済みフィールド (ExternalPhoto) に変換
+// してから 1 つの実装でハンドリングする。
+// ---------------------------------------------------------------------------
+interface ExternalPhoto {
+  externalId: string;
+  imageUrl: string;
+  sourceUrl: string;
+  authorName: string;
+  authorUrl: string;
+  description: string | null;
+  tags: string[];
+}
+
+function normalizeUnsplash(photo: UnsplashPhoto): ExternalPhoto {
+  return {
+    externalId: photo.id,
+    imageUrl: photo.urls.regular,
+    sourceUrl: photo.links.html,
+    authorName: photo.user.name,
+    authorUrl: photo.user.links.html,
+    description: photo.alt_description ?? photo.description,
+    tags: photo.tags?.map((t) => t.title) ?? [],
+  };
+}
+
+function normalizePexels(photo: PexelsPhoto): ExternalPhoto {
+  return {
+    externalId: String(photo.id),
+    imageUrl: photo.src.large,
+    sourceUrl: photo.url,
+    authorName: photo.photographer,
+    authorUrl: photo.photographer_url,
+    description: photo.alt || null,
+    tags: [],
+  };
+}
+
+async function upsertExternalPhotos(
+  source: SnapSource,
+  photos: ExternalPhoto[],
   query: string,
 ): Promise<void> {
   if (photos.length === 0) return;
 
-  const externalIds = photos.map((p) => p.id);
+  const externalIds = photos.map((p) => p.externalId);
   const existing = await prisma.snap.findMany({
     where: {
-      source: "unsplash",
+      source,
       externalId: { in: externalIds },
     },
     select: { externalId: true, searchQueries: true },
@@ -129,24 +186,24 @@ export async function upsertSnaps(
     existing.map((e) => [e.externalId, e.searchQueries]),
   );
 
-  const toCreate = photos.filter((p) => !existingMap.has(p.id));
+  const toCreate = photos.filter((p) => !existingMap.has(p.externalId));
   const toAppend = photos.filter((p) => {
-    const queries = existingMap.get(p.id);
+    const queries = existingMap.get(p.externalId);
     return queries !== undefined && !queries.includes(query);
   });
 
   if (toCreate.length > 0) {
     await prisma.snap.createMany({
       data: toCreate.map((photo) => ({
-        source: "unsplash",
-        externalId: photo.id,
-        imageUrl: photo.urls.regular,
-        sourceUrl: photo.links.html,
-        authorName: photo.user.name,
-        authorUrl: photo.user.links.html,
+        source,
+        externalId: photo.externalId,
+        imageUrl: photo.imageUrl,
+        sourceUrl: photo.sourceUrl,
+        authorName: photo.authorName,
+        authorUrl: photo.authorUrl,
         title: null,
-        description: photo.alt_description ?? photo.description,
-        tags: photo.tags?.map((t) => t.title) ?? [],
+        description: photo.description,
+        tags: photo.tags,
         searchQueries: [query],
         colorCategories: [],
       })),
@@ -159,11 +216,40 @@ export async function upsertSnaps(
       toAppend.map((photo) =>
         prisma.snap.update({
           where: {
-            source_externalId: { source: "unsplash", externalId: photo.id },
+            source_externalId: { source, externalId: photo.externalId },
           },
           data: { searchQueries: { push: query } },
         }),
       ),
     );
   }
+}
+
+/**
+ * Unsplash から取得した写真群を Snap テーブルにキャッシュする。
+ *
+ * - 新規写真: `createMany({ skipDuplicates: true })` で 1 クエリにバルク INSERT
+ * - 既存写真: `searchQueries` に `query` が未登録のものだけ `update` で push
+ *   （同一画像が別キーワードでヒットした履歴を保持）
+ *
+ * 競合: `createMany.skipDuplicates` で重複は黙殺、`update.searchQueries.push`
+ * は Prisma 内部で配列追記される。完全な原子性が必要になったら $transaction
+ * （Interactive）に切り替える。
+ */
+export async function upsertSnaps(
+  photos: UnsplashPhoto[],
+  query: string,
+): Promise<void> {
+  await upsertExternalPhotos("unsplash", photos.map(normalizeUnsplash), query);
+}
+
+/**
+ * Pexels から取得した写真群を Snap テーブルにキャッシュする。
+ * upsertSnaps と同じ upsert ロジックを source: "pexels" で再利用する。
+ */
+export async function upsertPexelsSnaps(
+  photos: PexelsPhoto[],
+  query: string,
+): Promise<void> {
+  await upsertExternalPhotos("pexels", photos.map(normalizePexels), query);
 }

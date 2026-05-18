@@ -6,7 +6,10 @@
 // ハードコードしており、next.config.ts が動的に Supabase ホストを追加するのと
 // 同期していなかった。本ファイルで両者を統合する。
 
-export const BASE_ALLOWED_IMAGE_HOSTS = ["images.unsplash.com"] as const;
+export const BASE_ALLOWED_IMAGE_HOSTS = [
+  "images.unsplash.com",
+  "images.pexels.com",
+] as const;
 
 export function resolveSupabaseHost(): string | null {
   const url = process.env.SUPABASE_URL;
