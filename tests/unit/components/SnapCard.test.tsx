@@ -101,19 +101,12 @@ describe("SnapCard", () => {
     ).not.toBeInTheDocument();
   });
 
-  describe("ソースバッジ", () => {
-    it("source='unsplash' のとき 'Unsplash' バッジが表示される", () => {
-      render(<SnapCard snap={mockSnap} />);
-      const badge = screen.getByTestId("snap-source-badge");
-      expect(badge).toHaveTextContent("Unsplash");
-    });
+  it("source 値はカード上のテキストに露出しない（画像のみ仕様）", () => {
+    render(<SnapCard snap={mockSnapPexels} />);
 
-    it("source='pexels' のとき UI 表記は 'Pinterest' になる", () => {
-      render(<SnapCard snap={mockSnapPexels} />);
-      const badge = screen.getByTestId("snap-source-badge");
-      expect(badge).toHaveTextContent("Pinterest");
-      // 内部実装名 "Pexels" が漏れていないこと
-      expect(badge).not.toHaveTextContent("Pexels");
-    });
+    expect(screen.queryByText("Unsplash")).not.toBeInTheDocument();
+    expect(screen.queryByText("Pinterest")).not.toBeInTheDocument();
+    expect(screen.queryByText("Pexels")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("snap-source-badge")).not.toBeInTheDocument();
   });
 });
