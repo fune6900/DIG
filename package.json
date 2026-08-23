@@ -11,6 +11,7 @@
     "test": "vitest",
     "e2e": "playwright test",
     "smoke:storage": "node scripts/smoke-supabase-storage.mjs",
+    "keepalive:supabase": "node scripts/supabase-keepalive.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {

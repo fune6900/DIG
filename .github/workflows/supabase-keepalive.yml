@@ -1,0 +1,39 @@
+name: Supabase Keepalive
+
+# Supabase 無料プランは 7 日間 API/DB アクセスが無いとプロジェクトが一時停止される。
+# 毎日 1 回 PostgREST に実クエリを投げて活動扱いにし、スリープを回避する。
+# 必要な Secrets: SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY
+# 任意の Variables: SUPABASE_KEEPALIVE_TABLE（既定: Ootd）
+on:
+  schedule:
+    # 毎日 03:17 UTC（= 12:17 JST）。GitHub 側で実行がスキップされても
+    # 7 日の猶予に対して十分な余裕を確保するため日次にしている。
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Ping Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # スクリプトは依存ゼロ（Node 22 の global fetch のみ）なので npm ci は不要。
+      - name: Ping Supabase REST API
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_KEEPALIVE_TABLE: ${{ vars.SUPABASE_KEEPALIVE_TABLE }}
+        run: node scripts/supabase-keepalive.mjs
