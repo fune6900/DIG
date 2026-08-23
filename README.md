@@ -41,3 +41,31 @@ npm run typecheck  # 型チェック
 npm test           # ユニットテスト（Vitest）
 npm run e2e        # E2Eテスト（Playwright）
 ```
+
+---
+
+## Supabase Keepalive
+
+Supabase 無料プランは **7 日間 API/DB アクセスが無いとプロジェクトが一時停止**される。
+`.github/workflows/supabase-keepalive.yml` が毎日 03:17 UTC に PostgREST へ 1 行 SELECT を投げて回避する。
+
+### セットアップ
+
+リポジトリの Settings → Secrets and variables → Actions に登録する。
+
+| 種別     | キー                        | 値                                          |
+| -------- | --------------------------- | ------------------------------------------- |
+| Secret   | `SUPABASE_URL`              | `https://<project-ref>.supabase.co`         |
+| Secret   | `SUPABASE_SERVICE_ROLE_KEY` | Supabase の service_role キー               |
+| Variable | `SUPABASE_KEEPALIVE_TABLE`  | 疎通に使うテーブル名（任意・既定は `Ootd`） |
+
+### 手元での確認
+
+```bash
+SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npm run keepalive:supabase
+```
+
+Actions タブの **Supabase Keepalive** → Run workflow でも手動実行できる。
+
+> **注意**: GitHub は 60 日間コミットが無いパブリックリポジトリの schedule を自動停止する。
+> 停止時は GitHub からメールが届くので、Actions タブから再有効化すること。
